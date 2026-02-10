@@ -7,7 +7,7 @@
     "build": "astro build",
     "start": "astro dev",
     "preview": "astro preview",
-    "deploy": "./deploy.sh"
+    "deploy": "astro build && ./deploy.sh"
   },
   "keywords": [],
   "author": "",
