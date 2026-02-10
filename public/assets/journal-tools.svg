@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="200" viewBox="0 0 320 200" role="img" aria-labelledby="title desc">
+  <title id="title">journal.tools logo</title>
+  <desc id="desc">Law review tools logo with scales and pen nib.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#3b2330"/>
+      <stop offset="100%" stop-color="#5a2f42"/>
+    </linearGradient>
+  </defs>
+  <rect width="320" height="200" rx="24" fill="url(#bg)"/>
+  <g transform="translate(56 14)" fill="none" stroke="#f8d6a4" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="104" y1="12" x2="104" y2="112"/>
+    <line x1="46" y1="34" x2="162" y2="34"/>
+    <line x1="62" y1="34" x2="40" y2="72"/>
+    <line x1="146" y1="34" x2="168" y2="72"/>
+    <path d="M24 72 C28 86 44 96 62 96 C80 96 96 86 100 72 Z" fill="#f8d6a4" stroke="none"/>
+    <path d="M108 72 C112 86 128 96 146 96 C164 96 180 86 184 72 Z" fill="#f8d6a4" stroke="none"/>
+  </g>
+  <g transform="translate(136 94)">
+    <path d="M24 0 L38 22 L24 40 L10 22 Z" fill="#ffe8c2"/>
+    <circle cx="24" cy="22" r="4" fill="#7a4d2f"/>
+  </g>
+  <text x="160" y="176" text-anchor="middle" font-family="'Space Grotesk', Arial, sans-serif" font-size="20" font-weight="700" fill="#ffe8c2" letter-spacing="1">JOURNAL.TOOLS</text>
+</svg>

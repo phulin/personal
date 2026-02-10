@@ -1,16 +1,16 @@
 ## featured projects
 
-### [p2](https://github.com/phulin/fastlaw)
+### [p2](https://github.com/phulin/poker2)
 
 library of machine learning-based texas hold 'em solvers
 
-[![project one preview](assets/project-one.svg)](https://github.com/phulin/fastlaw)
+[![p2 logo](assets/poker2.svg)](https://github.com/phulin/poker2)
 
 ### [fastlaw](https://github.com/phulin/fastlaw)
 
 LLM-driven automated ingestion and indexing of legal sources
 
-[![project two preview](assets/project-two.svg)](https://github.com/phulin/fastlaw)
+[![fast.law logo](assets/fastlaw.svg)](https://github.com/phulin/fastlaw)
 
 ### [oy](https://github.com/phulin/oy2)
 
@@ -22,16 +22,16 @@ the simplest possible social media network
 
 maximum likelihood estimation for bulk document dewarping
 
-[![project two preview](assets/project-two.svg)](https://github.com/phulin/rebook)
+[![rebook logo](assets/rebook.svg)](https://github.com/phulin/rebook)
 
 ### [kolmafia js](https://github.com/kolmafia/kolmafia/commit/bb791e32e101cbc91e7c4007d7abb86a9687d1a5)
 
 javascript execution engine for kol client "kolmafia"
 
-[![project two preview](assets/project-two.svg)](https://github.com/yale-law-journal/journal-tools)
+[![kolmafia-js logo](assets/kolmafia-js.svg)](https://github.com/kolmafia/kolmafia/commit/bb791e32e101cbc91e7c4007d7abb86a9687d1a5)
 
 ### [journal.tools](https://github.com/yale-law-journal/journal-tools)
 
 suite of automated processing tools for draft law review articles
 
-[![journal-tools logo](assets/journal-tools.png)](https://github.com/kolmafia/kolmafia/commit/bb791e32e101cbc91e7c4007d7abb86a9687d1a5)
+[![journal-tools logo](assets/journal-tools.svg)](https://github.com/yale-law-journal/journal-tools)

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="200" viewBox="0 0 320 200" role="img" aria-labelledby="title desc">
+  <title id="title">fast.law logo</title>
+  <desc id="desc">Literal fast.law text in a Newsreader-style serif with project colors.</desc>
+  <rect width="320" height="200" rx="24" fill="#f6f2ed"/>
+  <text x="160" y="124" text-anchor="middle" font-family="Newsreader, Fraunces, Georgia, serif" font-size="68" font-weight="400" fill="#1c1b1a">fast.law</text>
+</svg>
