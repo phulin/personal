@@ -14,6 +14,8 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@fontsource/fraunces": "^5.2.9",
+    "@fontsource/space-grotesk": "^5.2.10",
     "astro": "^5.17.1",
     "markdown-it": "^14.1.0"
   },

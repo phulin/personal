@@ -307,6 +307,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@fontsource/fraunces@npm:^5.2.9":
+  version: 5.2.9
+  resolution: "@fontsource/fraunces@npm:5.2.9"
+  checksum: 10c0/304da1515a9282551849c6bafcffe88cb51e845898e65072b08014ffadb43a6be9521fb94c03bfcdd487f5e5b41ba8f9573b2f7e41913837bd131f0906b3eac9
+  languageName: node
+  linkType: hard
+
+"@fontsource/space-grotesk@npm:^5.2.10":
+  version: 5.2.10
+  resolution: "@fontsource/space-grotesk@npm:5.2.10"
+  checksum: 10c0/dabe027e9ef8e4dc5d6982e3ff5a73a311a151c06f2dc0b881468c9bab4f0b39106f182aa29be8e1a4ea10ce435dea807bdcb982176ee5e81083fd3814f5a5bd
+  languageName: node
+  linkType: hard
+
 "@img/colour@npm:^1.0.0":
   version: 1.0.0
   resolution: "@img/colour@npm:1.0.0"
@@ -2957,6 +2971,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "personal@workspace:."
   dependencies:
+    "@fontsource/fraunces": "npm:^5.2.9"
+    "@fontsource/space-grotesk": "npm:^5.2.10"
     astro: "npm:^5.17.1"
     markdown-it: "npm:^14.1.0"
   languageName: unknown
