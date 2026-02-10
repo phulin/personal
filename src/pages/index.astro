@@ -1,0 +1,43 @@
+---
+import fs from "node:fs";
+import path from "node:path";
+import MarkdownIt from "markdown-it";
+import Layout from "../layouts/Layout.astro";
+
+const md = new MarkdownIt({ html: true, linkify: true });
+const rootDir = process.cwd();
+
+function stripFrontMatter(content) {
+  const match = content.match(/^---\r?\n[\s\S]*?\r?\n---\r?\n/);
+  if (match) {
+    return content.slice(match[0].length);
+  }
+  return content;
+}
+
+function readMarkdown(relativePath) {
+  const raw = fs.readFileSync(path.join(rootDir, relativePath), "utf8");
+  return stripFrontMatter(raw).trim();
+}
+
+const heroHtml = md.render(readMarkdown("content/hero.md")).replace("<p>", '<p class="lead">');
+const projectsHtml = md.render(readMarkdown("content/projects.md"));
+const educationHtml = md.render(readMarkdown("content/education.md"));
+const experienceHtml = md.render(readMarkdown("content/experience.md"));
+---
+
+<Layout title="hi, i'm your name.">
+  <section class="hero" set:html={heroHtml}></section>
+
+  <div class="divider"></div>
+
+  <div class="section" set:html={projectsHtml}></div>
+
+  <div class="divider"></div>
+
+  <center><h2>boring stuff</h2></center>
+  <section class="education grid">
+    <div class="section" set:html={educationHtml}></div>
+    <div class="section" set:html={experienceHtml}></div>
+  </section>
+</Layout>

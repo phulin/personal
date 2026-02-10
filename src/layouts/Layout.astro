@@ -1,0 +1,259 @@
+---
+interface Props {
+  title?: string;
+}
+
+const { title = "hi, i'm your name." } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="icon" href="/assets/logo.svg" type="image/svg+xml" />
+    <link rel="icon" href="/assets/favicon-32.png" sizes="32x32" type="image/png" />
+    <link rel="icon" href="/assets/favicon-16.png" sizes="16x16" type="image/png" />
+    <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" sizes="180x180" />
+    <link rel="shortcut icon" href="/assets/favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #1c1b1a;
+        --muted: #5b5954;
+        --line: #ded7cf;
+        --card: rgba(255, 255, 255, 0.78);
+        --accent: #8d6b4f;
+        --bg: #f6f2ed;
+        --bg-2: #eef1ed;
+        --shadow: 0 22px 60px rgba(30, 24, 18, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Space Grotesk", "Helvetica Neue", Arial, sans-serif;
+        color: var(--ink);
+        background: linear-gradient(140deg, var(--bg) 0%, #f9f8f5 35%, var(--bg-2) 100%);
+        min-height: 100vh;
+        position: relative;
+        overflow-x: hidden;
+      }
+
+      body::before,
+      body::after {
+        content: "";
+        position: absolute;
+        width: 420px;
+        height: 420px;
+        border-radius: 50%;
+        filter: blur(10px);
+        opacity: 0.45;
+        pointer-events: none;
+      }
+
+      body::before {
+        background: radial-gradient(circle at top, rgba(177, 167, 153, 0.55), transparent 70%);
+        top: -120px;
+        left: -120px;
+      }
+
+      body::after {
+        background: radial-gradient(circle at bottom, rgba(164, 186, 171, 0.55), transparent 70%);
+        bottom: -160px;
+        right: -120px;
+      }
+
+      main {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 80px 28px 120px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .hero {
+        text-align: center;
+        margin-bottom: 64px;
+        animation: rise 0.8s ease-out both;
+      }
+
+      .hero p {
+        font-size: 1.05rem;
+        max-width: 680px;
+        margin: 0 auto 14px;
+      }
+
+      h1 {
+        font-family: "Fraunces", "Times New Roman", serif;
+        font-size: clamp(2.4rem, 4vw, 3.4rem);
+        font-weight: 700;
+        margin: 0 0 18px;
+      }
+
+      h2 {
+        font-size: 1.1rem;
+        text-transform: lowercase;
+        letter-spacing: 0.03em;
+        margin: 0 0 18px;
+      }
+
+      h3 {
+        margin: 0 0 8px;
+        font-size: 1.05rem;
+        font-weight: 600;
+      }
+
+      p {
+        margin: 0 0 14px;
+        color: var(--muted);
+        line-height: 1.6;
+        font-size: 1rem;
+      }
+
+      h3 + p {
+        margin-top: 4px;
+      }
+
+      a {
+        color: var(--accent);
+        text-decoration: none;
+        border-bottom: 1px solid rgba(141, 107, 79, 0.35);
+      }
+
+      a.no-underline {
+        border: 0;
+      }
+
+      .lead {
+        font-size: 1.05rem;
+        max-width: 680px;
+        margin: 0 auto;
+      }
+
+      .divider {
+        height: 1px;
+        background: var(--line);
+        margin: 48px 0;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 36px;
+      }
+
+      .section {
+        animation: rise 0.9s ease-out both;
+      }
+
+      .section:nth-of-type(2) {
+        animation-delay: 0.12s;
+      }
+
+      .section:nth-of-type(3) {
+        animation-delay: 0.2s;
+      }
+
+      .section-header {
+        margin-bottom: 18px;
+        color: var(--ink);
+      }
+
+      .card-list {
+        display: grid;
+        grid-template-columns: 0.5fr 0.5fr;
+        gap: 16px;
+      }
+
+      .card {
+        background: var(--card);
+        border: 1px solid rgba(222, 215, 207, 0.8);
+        border-radius: 18px;
+        padding: 18px;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 16px;
+        align-items: center;
+        box-shadow: var(--shadow);
+      }
+
+      .card img {
+        width: 170px;
+        height: 110px;
+        object-fit: cover;
+        border-radius: 12px;
+        border: 1px solid rgba(222, 215, 207, 0.7);
+        background: #fff;
+      }
+
+      .item {
+        padding: 14px 0 18px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .item:last-child {
+        border-bottom: 0;
+      }
+
+      .item-meta {
+        font-size: 0.95rem;
+        color: var(--ink);
+        margin-bottom: 10px;
+      }
+
+      .education {
+        margin-top: 12px;
+      }
+
+      hr {
+        border: 0;
+        border-top: 1px solid var(--line);
+        margin: 18px 0;
+      }
+
+      @keyframes rise {
+        from {
+          opacity: 0;
+          transform: translateY(12px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @media (max-width: 900px) {
+        main {
+          padding: 64px 20px 96px;
+        }
+
+        .grid {
+          grid-template-columns: 1fr;
+        }
+
+        .card {
+          grid-template-columns: 1fr;
+        }
+
+        .card img {
+          width: 100%;
+          height: auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <slot />
+    </main>
+  </body>
+</html>
