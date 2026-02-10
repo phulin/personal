@@ -1,4 +1,4 @@
-## featured projects
+## featured projects ([github](https://github.com/phulin))
 
 ### [p2](https://github.com/phulin/poker2)
 

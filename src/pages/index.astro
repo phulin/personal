@@ -97,13 +97,14 @@ function renderProjects(markdown) {
     })
     .join("");
 
-  return `<h2>${escapeHtml(sectionTitle)}</h2><div class="card-list">${cards}</div>`;
+  return `<h2>${md.renderInline(sectionTitle)}</h2><div class="card-list">${cards}</div>`;
 }
 
 const heroHtml = md.render(readMarkdown("content/hero.md"));
 const projectsHtml = renderProjects(readMarkdown("content/projects.md"));
 const educationHtml = md.render(readMarkdown("content/education.md"));
 const experienceHtml = md.render(readMarkdown("content/experience.md"));
+const publicationsHtml = md.render(readMarkdown("content/publications.md"));
 ---
 
 <Layout title="hi, i'm your name.">
@@ -112,6 +113,10 @@ const experienceHtml = md.render(readMarkdown("content/experience.md"));
   <div class="divider"></div>
 
   <div class="section" set:html={projectsHtml}></div>
+
+  <div class="divider"></div>
+
+  <section class="section publications-section" set:html={publicationsHtml}></section>
 
   <div class="divider"></div>
 
