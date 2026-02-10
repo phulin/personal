@@ -20,8 +20,88 @@ function readMarkdown(relativePath) {
   return stripFrontMatter(raw).trim();
 }
 
-const heroHtml = md.render(readMarkdown("content/hero.md")).replace("<p>", '<p class="lead">');
-const projectsHtml = md.render(readMarkdown("content/projects.md"));
+function escapeHtml(value) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function renderProjects(markdown) {
+  const lines = markdown.split(/\r?\n/);
+  const sectionTitleLine = lines.find((line) => line.startsWith("## "));
+  const sectionTitle = sectionTitleLine ? sectionTitleLine.slice(3).trim() : "featured projects";
+  const projects = [];
+
+  let current = null;
+  for (const line of lines) {
+    if (line.startsWith("### ")) {
+      if (current) {
+        projects.push(current);
+      }
+      current = {
+        heading: line.slice(4).trim(),
+        bodyLines: [],
+      };
+      continue;
+    }
+
+    if (current) {
+      current.bodyLines.push(line);
+    }
+  }
+
+  if (current) {
+    projects.push(current);
+  }
+
+  const cards = projects
+    .map((project) => {
+      const headingMatch = project.heading.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+      const title = headingMatch ? headingMatch[1] : project.heading;
+      const href = headingMatch ? headingMatch[2] : "";
+
+      let imageSrc = "";
+      let imageAlt = "";
+      let imageHref = href;
+      const descriptionLines = [];
+
+      for (const line of project.bodyLines) {
+        const trimmed = line.trim();
+        const imageMatch = trimmed.match(/^\[!\[([^\]]*)\]\(([^)]+)\)\]\(([^)]+)\)$/);
+        if (imageMatch && !imageSrc) {
+          imageAlt = imageMatch[1];
+          imageSrc = imageMatch[2];
+          imageHref = imageMatch[3];
+          continue;
+        }
+
+        if (trimmed) {
+          descriptionLines.push(line);
+        }
+      }
+
+      const titleHtml = href
+        ? `<a href="${escapeHtml(href)}"><h3>${escapeHtml(title)}</h3></a>`
+        : `<h3>${escapeHtml(title)}</h3>`;
+      const descriptionHtml = descriptionLines.length
+        ? md.render(descriptionLines.join("\n\n"))
+        : "";
+      const imageHtml = imageSrc
+        ? `<a href="${escapeHtml(imageHref)}" class="no-underline"><img src="${escapeHtml(imageSrc)}" alt="${escapeHtml(imageAlt)}" /></a>`
+        : "";
+
+      return `<article class="card"><div>${titleHtml}${descriptionHtml}</div>${imageHtml}</article>`;
+    })
+    .join("");
+
+  return `<h2>${escapeHtml(sectionTitle)}</h2><div class="card-list">${cards}</div>`;
+}
+
+const heroHtml = md.render(readMarkdown("content/hero.md"));
+const projectsHtml = renderProjects(readMarkdown("content/projects.md"));
 const educationHtml = md.render(readMarkdown("content/education.md"));
 const experienceHtml = md.render(readMarkdown("content/experience.md"));
 ---

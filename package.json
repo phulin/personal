@@ -7,7 +7,7 @@
     "build": "astro build",
     "start": "astro dev",
     "preview": "astro preview",
-    "deploy": "aws s3 sync dist/ s3://phulin-me --exclude .DS_Store"
+    "deploy": "./deploy.sh"
   },
   "keywords": [],
   "author": "",

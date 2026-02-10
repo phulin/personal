@@ -1,75 +1,37 @@
 ## featured projects
 
-<div class="card-list">
-  <article class="card">
-    <div>
-      <a href="https://github.com/phulin/fastlaw">
-        <h3>p2</h3>
-      </a>
-      <p>library of machine learning-based texas hold 'em solvers</p>
-    </div>
-    <a href="https://github.com/phulin/fastlaw" class="no-underline">
-      <img src="assets/project-one.svg" alt="project one preview" />
-    </a>
-  </article>
+### [p2](https://github.com/phulin/fastlaw)
 
-  <article class="card">
-    <div>
-      <a href="https://github.com/phulin/fastlaw">
-          <h3>fastlaw</h3>
-      </a>
-      <p>LLM-driven automated ingestion and indexing of legal sources</p>
-    </div>
-    <a href="https://github.com/phulin/fastlaw" class="no-underline">
-      <img src="assets/project-two.svg" alt="project two preview" />
-    </a>
-  </article>
+library of machine learning-based texas hold 'em solvers
 
-  <article class="card">
-    <div>
-      <a href="https://github.com/phulin/oy2">
-        <h3>oy</h3>
-      </a>
-      <p>the simplest possible social media network</p>
-    </div>
-    <a href="https://github.com/phulin/fastlaw" class="no-underline">
-      <img src="assets/oy.svg" alt="Oy! Tell your friends" />
-    </a>
-  </article>
+[![project one preview](assets/project-one.svg)](https://github.com/phulin/fastlaw)
 
-  <article class="card">
-    <div>
-      <a href="https://github.com/phulin/rebook">
-        <h3>rebook</h3>
-      </a>
-      <p>maximum likelihood estimation for bulk document dewarping</p>
-    </div>
-    <a href="https://github.com/phulin/rebook" class="no-underline">
-      <img src="assets/project-two.svg" alt="project two preview" />
-    </a>
-  </article>
+### [fastlaw](https://github.com/phulin/fastlaw)
 
-  <article class="card">
-    <div>
-      <a href="https://github.com/kolmafia/kolmafia/commit/bb791e32e101cbc91e7c4007d7abb86a9687d1a5">
-        <h3>kolmafia js</h3>
-      </a>
-      <p>javascript execution engine for kol client "kolmafia"</p>
-    </div>
-    <a href="https://github.com/kolmafia/kolmafia/commit/bb791e32e101cbc91e7c4007d7abb86a9687d1a5" class="no-underline">
-      <img src="assets/project-two.svg" alt="project two preview" />
-    </a>
-  </article>
+LLM-driven automated ingestion and indexing of legal sources
 
-  <article class="card">
-    <div>
-      <a href="https://github.com/yale-law-journal/journal-tools">
-        <h3>journal.tools</h3>
-      </a>
-      <p>suite of automated processing tools for draft law review articles</p>
-    </div>
-    <a href="https://github.com/yale-law-journal/journal-tools" class="no-underline">
-      <img src="assets/project-two.svg" alt="project two preview" />
-    </a>
-  </article>
-</div>
+[![project two preview](assets/project-two.svg)](https://github.com/phulin/fastlaw)
+
+### [oy](https://github.com/phulin/oy2)
+
+the simplest possible social media network
+
+[![Oy! Tell your friends](assets/oy.svg)](https://github.com/phulin/oy2)
+
+### [rebook](https://github.com/phulin/rebook)
+
+maximum likelihood estimation for bulk document dewarping
+
+[![project two preview](assets/project-two.svg)](https://github.com/phulin/rebook)
+
+### [kolmafia js](https://github.com/kolmafia/kolmafia/commit/bb791e32e101cbc91e7c4007d7abb86a9687d1a5)
+
+javascript execution engine for kol client "kolmafia"
+
+[![project two preview](assets/project-two.svg)](https://github.com/yale-law-journal/journal-tools)
+
+### [journal.tools](https://github.com/yale-law-journal/journal-tools)
+
+suite of automated processing tools for draft law review articles
+
+[![journal-tools logo](assets/journal-tools.png)](https://github.com/kolmafia/kolmafia/commit/bb791e32e101cbc91e7c4007d7abb86a9687d1a5)
