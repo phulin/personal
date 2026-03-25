@@ -14,7 +14,7 @@ automatically creating a corpus of vulnerable programs to test vulnerability det
 
 ---
 
-### [Repeatable Reverse Engineering with PANDA](https://doi.org/10.1145/2831296.2831300)  **(PPREW @ CSAC 2015)**
+### [Repeatable Reverse Engineering with PANDA](https://doi.org/10.1145/2831296.2831300)  **(PPREW @ ACSAC 2015)**
 
 Brendan Dolan-Gavitt, Josh Hodosh, Patrick Hulin, Tim Leek, Ryan Whelan.
 system-level and embedded reverse-engineering using whole-system record and replay.

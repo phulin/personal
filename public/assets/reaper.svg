@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="200" viewBox="0 0 320 200" role="img" aria-labelledby="title desc">
+  <title id="title">Reaper logo</title>
+  <desc id="desc">Cartoon grim reaper holding a scythe on a dark background.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0d1016"/>
+      <stop offset="100%" stop-color="#1e2430"/>
+    </linearGradient>
+    <linearGradient id="cloak" x1="0" y1="0" x2="0.9" y2="1">
+      <stop offset="0%" stop-color="#202736"/>
+      <stop offset="100%" stop-color="#05070c"/>
+    </linearGradient>
+    <linearGradient id="blade" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#eef4fb"/>
+      <stop offset="100%" stop-color="#93a6ba"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#77f6c2" stop-opacity="0"/>
+      <stop offset="50%" stop-color="#77f6c2" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#77f6c2" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="320" height="200" rx="24" fill="url(#bg)"/>
+  <circle cx="108" cy="78" r="50" fill="#77f6c2" opacity="0.18"/>
+  <ellipse cx="160" cy="176" rx="96" ry="12" fill="#05070c" opacity="0.55"/>
+  <rect x="226" y="24" width="7" height="122" rx="3.5" fill="#8a6445" transform="rotate(18 229.5 85)"/>
+  <path d="M224 31 C261 18 283 30 289 48 C270 41 253 48 238 67 C232 55 226 45 224 31 Z" fill="url(#blade)"/>
+  <path d="M170 55 C188 68 197 90 194 119 C191 143 175 159 160 166 C145 159 129 143 126 119 C123 90 132 68 150 55 Z" fill="url(#cloak)"/>
+  <path d="M134 116 C124 126 116 141 111 160 L132 160 C137 144 142 134 150 127 Z" fill="#0a0d14"/>
+  <path d="M186 116 C196 126 204 141 209 160 L188 160 C183 144 178 134 170 127 Z" fill="#0a0d14"/>
+  <path d="M139 70 C146 57 156 52 160 52 C164 52 174 57 181 70 L173 108 L147 108 Z" fill="#0b0f16"/>
+  <path d="M147 73 C152 67 156 64 160 64 C164 64 168 67 173 73 L170 93 C166 97 163 99 160 99 C157 99 154 97 150 93 Z" fill="#f5f1e8"/>
+  <ellipse cx="154" cy="80" rx="4" ry="6" fill="#0d1016"/>
+  <ellipse cx="166" cy="80" rx="4" ry="6" fill="#0d1016"/>
+  <path d="M160 86 L156 92 L164 92 Z" fill="#0d1016"/>
+  <path d="M149 99 C156 104 164 104 171 99" fill="none" stroke="#0d1016" stroke-width="3" stroke-linecap="round"/>
+  <path d="M127 117 C140 110 150 108 160 108 C170 108 180 110 193 117 C189 128 180 138 160 144 C140 138 131 128 127 117 Z" fill="#111722"/>
+  <path d="M119 96 C109 102 102 111 98 123" fill="none" stroke="#111722" stroke-width="10" stroke-linecap="round"/>
+  <path d="M201 96 C211 102 218 111 222 123" fill="none" stroke="#111722" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="96" cy="126" r="10" fill="#f5f1e8"/>
+  <circle cx="224" cy="126" r="10" fill="#f5f1e8"/>
+  <path d="M43 146 H277" stroke="url(#glow)" stroke-width="3" stroke-linecap="round"/>
+  <text x="160" y="184" text-anchor="middle" font-family="'Space Grotesk', Arial, sans-serif" font-size="22" font-weight="700" fill="#eef4fb" letter-spacing="1.6">REAPER</text>
+</svg>
