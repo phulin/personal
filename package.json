@@ -19,5 +19,8 @@
     "astro": "^5.17.1",
     "markdown-it": "^14.1.0"
   },
-  "packageManager": "yarn@4.12.0"
+  "packageManager": "yarn@4.12.0",
+  "devDependencies": {
+    "@types/node": "^25.5.2"
+  }
 }

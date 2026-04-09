@@ -1,0 +1,49 @@
+---
+import fs from "node:fs";
+import path from "node:path";
+import MarkdownIt from "markdown-it";
+import Layout from "../layouts/Layout.astro";
+
+const md = new MarkdownIt({ html: true, linkify: true });
+const rootDir = process.cwd();
+
+function stripFrontMatter(content) {
+	const match = content.match(/^---\r?\n[\s\S]*?\r?\n---\r?\n/);
+	if (match) {
+		return content.slice(match[0].length);
+	}
+	return content;
+}
+
+function readMarkdown(relativePath) {
+	const raw = fs.readFileSync(path.join(rootDir, relativePath), "utf8");
+	return stripFrontMatter(raw).trim();
+}
+
+const blogDir = path.join(rootDir, "content/blog");
+const posts = fs.readdirSync(blogDir).map((file) => `content/blog/${file}`);
+const dates = posts.map((post) => fs.statSync(post).mtime);
+const sortedPosts = posts
+	.map((post) => ({
+		markdown: readMarkdown(post),
+		date: fs.statSync(post).mtime,
+	}))
+	.sort((a, b) => b.date.getTime() - a.date.getTime());
+const postContent = sortedPosts.map(({ markdown, date }) => {
+	const title = markdown.match(/^#\s+(.*)/)?.[1] || "Untitled Post";
+	const html = md.render(markdown);
+	return { title, date, html };
+});
+---
+
+<Layout title="patrick hulin's internet blog">
+  <center><h1 style="margin-bottom: 3rem">patrick hulin's internet blog</h1></center>
+  {
+    postContent.map((post) => (
+      <article>
+        <h2 style="margin-bottom: 0.5rem">{post.date.toLocaleDateString()}</h2>
+        <div set:html={post.html}></div>
+      </article>
+    ))
+  }
+</Layout>
