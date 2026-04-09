@@ -1,4 +1,5 @@
 ---
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import MarkdownIt from "markdown-it";
@@ -20,29 +21,47 @@ function readMarkdown(relativePath) {
 	return stripFrontMatter(raw).trim();
 }
 
+function getPostDate(relativePath) {
+	try {
+		const out = execFileSync(
+			"git",
+			["log", "-1", "--format=%cI", "--", relativePath],
+			{ cwd: rootDir, encoding: "utf8" },
+		).trim();
+		if (out) return new Date(out);
+	} catch {}
+	return fs.statSync(path.join(rootDir, relativePath)).mtime;
+}
+
 const blogDir = path.join(rootDir, "content/blog");
-const posts = fs.readdirSync(blogDir).map((file) => `content/blog/${file}`);
-const dates = posts.map((post) => fs.statSync(post).mtime);
+const posts = fs.readdirSync(blogDir);
 const sortedPosts = posts
 	.map((post) => ({
-		markdown: readMarkdown(post),
-		date: fs.statSync(post).mtime,
+		slug: post.replace(".md", ""),
+		markdown: readMarkdown(`content/blog/${post}`),
+		date: getPostDate(`content/blog/${post}`),
 	}))
 	.sort((a, b) => b.date.getTime() - a.date.getTime());
-const postContent = sortedPosts.map(({ markdown, date }) => {
+const postContent = sortedPosts.map(({ slug, markdown, date }) => {
 	const title = markdown.match(/^#\s+(.*)/)?.[1] || "Untitled Post";
 	const html = md.render(markdown);
-	return { title, date, html };
+	return { title, slug, date, html };
 });
 ---
 
 <Layout title="patrick hulin's internet blog">
-  <center><h1 style="margin-bottom: 3rem">patrick hulin's internet blog</h1></center>
+  <center><h1 style="margin-bottom: 3rem">patrick's internet blog</h1></center>
   {
-    postContent.map((post) => (
-      <article>
-        <h2 style="margin-bottom: 0.5rem">{post.date.toLocaleDateString()}</h2>
-        <div set:html={post.html}></div>
+    postContent.map(({ slug, date, html }) => (
+      <article id={slug}>
+        <a href={`/blog#${slug}`}>
+          <h2 style="margin-bottom: 0.5rem">
+            <time datetime={date.toISOString()}>
+              {date.toLocaleString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric", hour: "numeric", minute: "2-digit" })}
+            </time>
+          </h2>
+        </a>
+        <div set:html={html}></div>
       </article>
     ))
   }
