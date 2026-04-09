@@ -37,7 +37,7 @@ const blogDir = path.join(rootDir, "content/blog");
 const posts = fs.readdirSync(blogDir);
 const sortedPosts = posts
 	.map((post) => ({
-		slug: post.replace(".md", ""),
+		slug: post,
 		markdown: readMarkdown(`content/blog/${post}`),
 		date: getPostDate(`content/blog/${post}`),
 	}))
@@ -50,16 +50,31 @@ const postContent = sortedPosts.map(({ slug, markdown, date }) => {
 ---
 
 <Layout title="patrick hulin's internet blog">
-  <center><h1 style="margin-bottom: 3rem">patrick's internet blog</h1></center>
+  <style is:global>
+    h1 {
+      margin-bottom: 3rem;
+    }
+    h2 {
+      font-family: "Fraunces", "Times New Roman", serif;
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+      text-transform: inherit;
+    }
+    h3 {
+      margin-bottom: 0.5rem;
+      text-transform: lowercase;
+    }
+  </style>
+  <center><h1>patrick's internet blog</h1></center>
   {
     postContent.map(({ slug, date, html }) => (
       <article id={slug}>
         <a href={`/blog#${slug}`}>
-          <h2 style="margin-bottom: 0.5rem">
+          <h3>
             <time datetime={date.toISOString()}>
               {date.toLocaleString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric", hour: "numeric", minute: "2-digit" })}
             </time>
-          </h2>
+          </h3>
         </a>
         <div set:html={html}></div>
       </article>
