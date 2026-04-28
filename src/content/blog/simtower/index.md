@@ -19,7 +19,7 @@ So I did it. I started with the general binary reverse-engineering framework I'v
 
 `reaper` uses a set of prompt templates and a skill to enable the AI of your choice to connect to Ghidra. Over multiple prompting sessions, the AI builds up understanding of the binary, beginning with low-level, easy-to-identify functions and data structures that compose into the higher-level logic. This process has worked for me on smaller programs, and I was hoping to use the output as the foundation of the clean-room spec.
 
-That was my theory, at least. I had dramatically underestimated the complexity of a full specification. Each room's sims have 10-15 possible states and a complex state transition function requiring. And due to the optimizations necessary at the time, the game aggressively caches and stores any computation it can, often in packed bitfields or other obscure structures. The results? I'd say they approached a functioning simulation. But the simulation never got to a point that was playable, and certainly never got to behavioral parity.
+That was my theory, at least. I had dramatically underestimated the complexity of a full specification. Each room's sims have 10-15 possible states and a complex transition function requiring precise tracking of information. And due to the optimizations necessary at the time, the game aggressively caches and stores any computation it can, often in packed bitfields or other obscure structures. The results? I'd say they approached a functioning simulation. But the simulation never got to a point that was playable, and certainly never got to behavioral parity.
 
 Static analysis did teach me three specific failures of the current AIs.
 
