@@ -8,12 +8,19 @@ import "@fontsource/space-grotesk/latin-600.css";
 interface Props {
   title?: string;
   description?: string;
+  ogTitle?: string;
+  ogImage?: string;
 }
 
 const {
   title = "patrick hulin's internet website",
   description = "Personal website of Patrick Hulin: projects, writing, background, and selected publications.",
+  ogTitle,
+  ogImage = "/assets/logo-512.png",
 } = Astro.props;
+
+const ogImageUrl = new URL(ogImage, Astro.site ?? Astro.url).toString();
+const resolvedOgTitle = ogTitle ?? title;
 ---
 
 <!doctype html>
@@ -24,11 +31,13 @@ const {
     <title>{title}</title>
     <meta name="description" content={description} />
     <meta property="og:type" content="website" />
-    <meta property="og:title" content={title} />
+    <meta property="og:title" content={resolvedOgTitle} />
     <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImageUrl} />
     <meta name="twitter:card" content="summary" />
-    <meta name="twitter:title" content={title} />
+    <meta name="twitter:title" content={resolvedOgTitle} />
     <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageUrl} />
     <link rel="manifest" href="/manifest.json" />
     <link rel="icon" href="/assets/logo.svg" type="image/svg+xml" />
     <link rel="icon" href="/assets/favicon-32.png" sizes="32x32" type="image/png" />
