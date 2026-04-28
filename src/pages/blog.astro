@@ -1,8 +1,8 @@
 ---
+import { type CollectionEntry, getCollection, render } from "astro:content";
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-import { getCollection, render, type CollectionEntry } from "astro:content";
 import Layout from "../layouts/Layout.astro";
 
 type BlogEntry = CollectionEntry<"blog">;
@@ -34,7 +34,9 @@ const rendered = await Promise.all(
 		const { Content } = await render(entry);
 		const date = getPostDate(entry);
 		const title =
-			entry.data.title || entry.body?.match(/^#\s+(.*)/m)?.[1] || "Untitled Post";
+			entry.data.title ||
+			entry.body?.match(/^#\s+(.*)/m)?.[1] ||
+			"Untitled Post";
 		return { entry, Content, date, title };
 	}),
 );
@@ -44,7 +46,11 @@ rendered.sort((a, b) => b.date.getTime() - a.date.getTime());
 <Layout title="patrick hulin's internet blog">
   <style is:global>
     h1 {
+      text-transform: lowercase;
       margin-bottom: 3rem;
+    }
+    article h1 {
+      margin-bottom: 1rem;
     }
     h2 {
       font-family: "Fraunces", "Times New Roman", serif;
@@ -57,6 +63,9 @@ rendered.sort((a, b) => b.date.getTime() - a.date.getTime());
       text-transform: lowercase;
     }
     article img {
+      display: block;
+      margin: 0;
+      width: 60%;
       max-width: 100%;
       height: auto;
       border-radius: 12px;

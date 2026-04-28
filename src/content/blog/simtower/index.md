@@ -1,5 +1,4 @@
 # Reverse Engineering SimTower
-
 I woke up the other day and asked: could an LLM reverse engineer a modern clone of my favorite childhood video game? So I did it. [towers.world]() is live today and allows collaborative, coop play on a perfect clone of the original game.
 
 ### The Clone
@@ -7,6 +6,7 @@ I woke up the other day and asked: could an LLM reverse engineer a modern clone 
 
 ### The Original
 ![The original](./original.png)
+
 *Thanks to [this retrospective](https://sonatano1.wordpress.com/2014/07/19/retrospective-simtower/) for the image.*
 
 At its core, the game is an elevator simulator. It starts getting hard when your tower grows and your sims contend with each other on getting where they want to go. For example, offices grow your tower the fastest, but they come with 6 sims on a synchronized 9-5 schedule that heavily loads your elevators. As a result, you have to manage very tightly what floors your elevators go to and when.
