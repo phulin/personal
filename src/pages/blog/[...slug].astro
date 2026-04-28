@@ -81,11 +81,13 @@ const title =
     <h1><a href="/blog" class="blog-header-link">patrick's internet blog</a></h1>
   </center>
   <article id={entry.id}>
-    <h3>
-      <time datetime={date.toISOString()}>
-        {date.toLocaleString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric", hour: "numeric", minute: "2-digit" })}
-      </time>
-    </h3>
+    <a href={`/blog/${entry.id}`}>
+      <h3>
+        <time datetime={date.toISOString()}>
+          {date.toLocaleString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric", hour: "numeric", minute: "2-digit" })}
+        </time>
+      </h3>
+    </a>
     <Content />
   </article>
 </Layout>
