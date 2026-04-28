@@ -37,7 +37,7 @@ const blogDir = path.join(rootDir, "content/blog");
 const posts = fs.readdirSync(blogDir);
 const sortedPosts = posts
 	.map((post) => ({
-		slug: post,
+		slug: post.replace(".md", ""),
 		markdown: readMarkdown(`content/blog/${post}`),
 		date: getPostDate(`content/blog/${post}`),
 	}))
@@ -56,7 +56,7 @@ const postContent = sortedPosts.map(({ slug, markdown, date }) => {
     }
     h2 {
       font-family: "Fraunces", "Times New Roman", serif;
-      font-size: 1.5rem;
+      font-size: 1.8rem;
       margin-bottom: 0.5rem;
       text-transform: inherit;
     }
