@@ -2,51 +2,43 @@
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-import MarkdownIt from "markdown-it";
+import { getCollection, render, type CollectionEntry } from "astro:content";
 import Layout from "../layouts/Layout.astro";
 
-const md = new MarkdownIt({ html: true, linkify: true });
+type BlogEntry = CollectionEntry<"blog">;
+
 const rootDir = process.cwd();
 
-function stripFrontMatter(content) {
-	const match = content.match(/^---\r?\n[\s\S]*?\r?\n---\r?\n/);
-	if (match) {
-		return content.slice(match[0].length);
+function getPostDate(entry: BlogEntry) {
+	if (entry.data.date) return entry.data.date;
+	const filePath = entry.filePath;
+	if (filePath) {
+		try {
+			const out = execFileSync(
+				"git",
+				["log", "-1", "--format=%cI", "--", filePath],
+				{ cwd: rootDir, encoding: "utf8" },
+			).trim();
+			if (out) return new Date(out);
+		} catch {}
+		try {
+			return fs.statSync(path.join(rootDir, filePath)).mtime;
+		} catch {}
 	}
-	return content;
+	return new Date(0);
 }
 
-function readMarkdown(relativePath) {
-	const raw = fs.readFileSync(path.join(rootDir, relativePath), "utf8");
-	return stripFrontMatter(raw).trim();
-}
-
-function getPostDate(relativePath) {
-	try {
-		const out = execFileSync(
-			"git",
-			["log", "-1", "--format=%cI", "--", relativePath],
-			{ cwd: rootDir, encoding: "utf8" },
-		).trim();
-		if (out) return new Date(out);
-	} catch {}
-	return fs.statSync(path.join(rootDir, relativePath)).mtime;
-}
-
-const blogDir = path.join(rootDir, "content/blog");
-const posts = fs.readdirSync(blogDir);
-const sortedPosts = posts
-	.map((post) => ({
-		slug: post.replace(".md", ""),
-		markdown: readMarkdown(`content/blog/${post}`),
-		date: getPostDate(`content/blog/${post}`),
-	}))
-	.sort((a, b) => b.date.getTime() - a.date.getTime());
-const postContent = sortedPosts.map(({ slug, markdown, date }) => {
-	const title = markdown.match(/^#\s+(.*)/)?.[1] || "Untitled Post";
-	const html = md.render(markdown);
-	return { title, slug, date, html };
-});
+const entries = await getCollection("blog");
+const rendered = await Promise.all(
+	entries.map(async (entry: BlogEntry) => {
+		const { Content } = await render(entry);
+		const date = getPostDate(entry);
+		const title =
+			entry.data.title || entry.body?.match(/^#\s+(.*)/m)?.[1] || "Untitled Post";
+		return { entry, Content, date, title };
+	}),
+);
+rendered.sort((a, b) => b.date.getTime() - a.date.getTime());
 ---
 
 <Layout title="patrick hulin's internet blog">
@@ -64,19 +56,24 @@ const postContent = sortedPosts.map(({ slug, markdown, date }) => {
       margin-bottom: 0.5rem;
       text-transform: lowercase;
     }
+    article img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 12px;
+    }
   </style>
   <center><h1>patrick's internet blog</h1></center>
   {
-    postContent.map(({ slug, date, html }) => (
-      <article id={slug}>
-        <a href={`/blog#${slug}`}>
+    rendered.map(({ entry, Content, date }) => (
+      <article id={entry.id}>
+        <a href={`/blog#${entry.id}`}>
           <h3>
             <time datetime={date.toISOString()}>
               {date.toLocaleString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric", hour: "numeric", minute: "2-digit" })}
             </time>
           </h3>
         </a>
-        <div set:html={html}></div>
+        <Content />
       </article>
     ))
   }
