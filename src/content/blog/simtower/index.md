@@ -61,3 +61,7 @@ This project used an absolutely ridiculous number of tokens. I had to upgrade to
 In conclusion: I did this, and you can do it too! You can translate code from machine code to a modern language. There are terabytes of abandoned machine code out there. For the first time, we have a tool that lets us economically modify and reuse that software in a sustainable way. That's an incredible advance.
 
 [towers.world](https://towers.world) is available now. Play it!
+
+### Postscript
+
+I did all this work while a participant at the [Recurse Center](https://recurse.com), a retreat for programmers in NYC and one of my favorite places in the world. If you're wondering whether to apply, you should!
