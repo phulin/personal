@@ -2,7 +2,7 @@
 
 ### [towers.world](https://github.com/phulin/tower-together)
 
-Cooperative reimplementation of the classic computer game SimTower
+perfect, coop clone of classic game SimTower
 
 [![towers.world logo](assets/tower.png)](https://github.com/phulin/tower-together)
 
