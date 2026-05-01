@@ -1,5 +1,11 @@
 ## featured projects ([github](https://github.com/phulin))
 
+### [towers.world](https://github.com/phulin/tower-together)
+
+Cooperative reimplementation of the classic computer game SimTower
+
+[![towers.world logo](assets/tower.png)](https://github.com/phulin/tower-together)
+
 ### [p2](https://github.com/phulin/poker2)
 
 library of machine learning-based texas hold 'em solvers
@@ -41,9 +47,3 @@ library of algorithms for bulk document dewarping
 javascript execution engine for kingdom of loathing client "kolmafia"
 
 [![kolmafia-js logo](assets/kolmafia-js.svg)](https://github.com/kolmafia/kolmafia/commit/bb791e32e101cbc91e7c4007d7abb86a9687d1a5)
-
-### [journal.tools](https://github.com/yale-law-journal/journal-tools)
-
-suite of automated processing tools for draft law review articles
-
-[![journal-tools logo](assets/journal-tools.svg)](https://github.com/yale-law-journal/journal-tools)
