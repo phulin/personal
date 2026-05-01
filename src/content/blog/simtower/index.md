@@ -1,5 +1,5 @@
 # Reverse Engineering SimTower
-I woke up the other day and asked: could an LLM reverse engineer a modern clone of my favorite childhood video game? So I did it. [towers.world]() is live today and allows collaborative, coop play on a perfect clone of the original game.
+I woke up the other day and asked: could an LLM reverse engineer a modern clone of my favorite childhood video game? So I did it. [towers.world](https://towers.world) is live today and allows collaborative, coop play on a perfect clone of the original game.
 
 ### The Clone
 ![The clone](./clone.png)
