@@ -1,32 +1,9 @@
 ---
 import { type CollectionEntry, getCollection, render } from "astro:content";
-import { execFileSync } from "node:child_process";
-import fs from "node:fs";
-import path from "node:path";
+import { getPostDate } from "../../lib/blog";
 import Layout from "../../layouts/Layout.astro";
 
 type BlogEntry = CollectionEntry<"blog">;
-
-const rootDir = process.cwd();
-
-function getPostDate(entry: BlogEntry) {
-	if (entry.data.date) return entry.data.date;
-	const filePath = entry.filePath;
-	if (filePath) {
-		try {
-			const out = execFileSync(
-				"git",
-				["log", "-1", "--format=%cI", "--", filePath],
-				{ cwd: rootDir, encoding: "utf8" },
-			).trim();
-			if (out) return new Date(out);
-		} catch {}
-		try {
-			return fs.statSync(path.join(rootDir, filePath)).mtime;
-		} catch {}
-	}
-	return new Date(0);
-}
 
 export async function getStaticPaths() {
 	const entries = await getCollection("blog");
