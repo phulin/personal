@@ -763,7 +763,16 @@ export default function ComputeCapacityModel() {
 					</h1>
 					<p className="mt-4 text-sm leading-6 text-slate-600 md:text-base">
 						GW of usable AI compute is a hard ceiling on revenue: every dollar
-						booked has to be served from somewhere. This model takes public deal
+						booked has to be served from somewhere (
+						<a
+							href="https://openai.com/index/a-business-that-scales-with-the-value-of-intelligence/"
+							target="_blank"
+							rel="noopener noreferrer"
+							className="underline decoration-slate-400 underline-offset-2 hover:text-slate-900"
+						>
+							OpenAI itself frames the business this way
+						</a>
+						). This model takes public deal
 						anchors as a forward GW supply curve, divides reported (or
 						net-retained) revenue by that curve, and asks whether the implied
 						$/GW-year is plausible. Headline run-rate numbers that imply a
