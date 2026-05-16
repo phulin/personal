@@ -298,6 +298,7 @@ interface NumberInputProps {
 	step?: number;
 	min?: number;
 	disabled?: boolean;
+	digits?: number;
 }
 
 function NumberInput({
@@ -306,20 +307,23 @@ function NumberInput({
 	step = 0.01,
 	min = 0,
 	disabled = false,
+	digits = 2,
 }: NumberInputProps) {
-	const displayValue = Number.isFinite(value) ? value : 0;
+	const [focused, setFocused] = useState(false);
+	const v = Number.isFinite(value) ? value : 0;
+	const displayValue = focused ? v : Number(v.toFixed(digits));
 	return (
 		<input
 			type="number"
-			value={
-				disabled ? Number(displayValue.toFixed(2)) : displayValue
-			}
+			value={displayValue}
 			step={step}
 			min={min}
 			disabled={disabled}
+			onFocus={() => setFocused(true)}
+			onBlur={() => setFocused(false)}
 			onChange={(e) => {
-				const v = Number.parseFloat(e.target.value);
-				onChange(Number.isFinite(v) ? v : 0);
+				const next = Number.parseFloat(e.target.value);
+				onChange(Number.isFinite(next) ? next : 0);
 			}}
 			className={`w-full rounded-md border px-2 py-1 text-right text-sm tabular-nums focus:outline-none ${
 				disabled
@@ -582,6 +586,21 @@ export default function ComputeCapacityModel() {
 		setScenario("custom");
 	}
 
+	function rescaleGrossForHaircut(
+		company: Company,
+		oldHaircut: number,
+		newHaircut: number,
+	) {
+		const oldFrac = 1 - oldHaircut / 100;
+		const newFrac = 1 - newHaircut / 100;
+		if (newFrac <= 0) return;
+		const ratio = oldFrac / newFrac;
+		setGrossValues((prev) => ({
+			...prev,
+			[company]: prev[company].map((g) => g * ratio),
+		}));
+	}
+
 	const rows: Row[] = useMemo(() => {
 		return PERIODS.map((p, i) => {
 			const agw = gwValues.Anthropic[i];
@@ -765,13 +784,16 @@ export default function ComputeCapacityModel() {
 													colSpan={2}
 													className="border-l border-slate-200 px-3 py-2 text-center"
 												>
-													Gross half-year revenue ($B)
+													{revenueView === "gross" ? "Gross" : "Net-retained"}{" "}
+													half-year revenue ($B)
 												</th>
 												<th
 													colSpan={2}
 													className="border-l border-slate-200 px-3 py-2 text-center"
 												>
-													Implied gross $/GW-year ($B)
+													Implied{" "}
+													{revenueView === "gross" ? "gross" : "net"}{" "}
+													$/GW-year ($B)
 												</th>
 											</tr>
 											<tr>
@@ -799,14 +821,42 @@ export default function ComputeCapacityModel() {
 											{PERIODS.map((p, i) => {
 												const aGw = gwValues.Anthropic[i];
 												const oGw = gwValues.OpenAI[i];
+												const aHaircutFrac = 1 - anthropicHaircut / 100;
+												const oHaircutFrac = 1 - openaiHaircut / 100;
+												const aDisplayedRevenue =
+													revenueView === "gross"
+														? effectiveGross.Anthropic[i]
+														: effectiveGross.Anthropic[i] * aHaircutFrac;
+												const oDisplayedRevenue =
+													revenueView === "gross"
+														? effectiveGross.OpenAI[i]
+														: effectiveGross.OpenAI[i] * oHaircutFrac;
 												const aDpgy =
-													aGw > 0
-														? effectiveGross.Anthropic[i] / (aGw * 0.5)
-														: 0;
+													aGw > 0 ? aDisplayedRevenue / (aGw * 0.5) : 0;
 												const oDpgy =
-													oGw > 0
-														? effectiveGross.OpenAI[i] / (oGw * 0.5)
-														: 0;
+													oGw > 0 ? oDisplayedRevenue / (oGw * 0.5) : 0;
+												const handleAnthropicRevenue = (v: number) => {
+													updateGross(
+														"Anthropic",
+														i,
+														revenueView === "gross"
+															? v
+															: aHaircutFrac > 0
+																? v / aHaircutFrac
+																: 0,
+													);
+												};
+												const handleOpenAIRevenue = (v: number) => {
+													updateGross(
+														"OpenAI",
+														i,
+														revenueView === "gross"
+															? v
+															: oHaircutFrac > 0
+																? v / oHaircutFrac
+																: 0,
+													);
+												};
 												return (
 													<tr key={p.key}>
 														<td className="px-3 py-2 font-medium text-slate-700">
@@ -826,10 +876,8 @@ export default function ComputeCapacityModel() {
 														</td>
 														<td className="w-28 border-l border-slate-200 px-2 py-1.5">
 															<NumberInput
-																value={effectiveGross.Anthropic[i]}
-																onChange={(v) =>
-																	updateGross("Anthropic", i, v)
-																}
+																value={aDisplayedRevenue}
+																onChange={handleAnthropicRevenue}
 																step={0.1}
 																disabled={
 																	forecastMode !== "manual" &&
@@ -839,8 +887,8 @@ export default function ComputeCapacityModel() {
 														</td>
 														<td className="w-28 px-2 py-1.5">
 															<NumberInput
-																value={effectiveGross.OpenAI[i]}
-																onChange={(v) => updateGross("OpenAI", i, v)}
+																value={oDisplayedRevenue}
+																onChange={handleOpenAIRevenue}
 																step={0.1}
 																disabled={
 																	forecastMode !== "manual" &&
@@ -877,6 +925,13 @@ export default function ComputeCapacityModel() {
 											max={40}
 											step={1}
 											onValueChange={(v) => {
+												if (revenueView === "net") {
+													rescaleGrossForHaircut(
+														"Anthropic",
+														anthropicHaircut,
+														v[0],
+													);
+												}
 												setAnthropicHaircut(v[0]);
 												setScenario("custom");
 											}}
@@ -901,6 +956,13 @@ export default function ComputeCapacityModel() {
 											max={35}
 											step={1}
 											onValueChange={(v) => {
+												if (revenueView === "net") {
+													rescaleGrossForHaircut(
+														"OpenAI",
+														openaiHaircut,
+														v[0],
+													);
+												}
 												setOpenaiHaircut(v[0]);
 												setScenario("custom");
 											}}
