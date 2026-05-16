@@ -1,6 +1,14 @@
 ---
 import "@/styles/globals.css";
 import ComputeCapacityModel from "@/components/ComputeCapacityModel.tsx";
+
+const title = "OpenAI v. Anthropic revenue - patrick hulin";
+const description =
+	"Anthropic vs. OpenAI forward compute and revenue-capacity model.";
+const ogImageUrl = new URL(
+	"/assets/revenue-graph.jpg",
+	Astro.site ?? Astro.url,
+).toString();
 ---
 
 <!doctype html>
@@ -8,8 +16,18 @@ import ComputeCapacityModel from "@/components/ComputeCapacityModel.tsx";
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>AI compute capacity model</title>
-    <meta name="description" content="Anthropic vs. OpenAI forward compute and revenue-capacity model." />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImageUrl} />
+    <meta property="og:image:width" content="1436" />
+    <meta property="og:image:height" content="604" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageUrl} />
   </head>
   <body class="bg-slate-50">
     <header class="flex justify-center pt-10">
