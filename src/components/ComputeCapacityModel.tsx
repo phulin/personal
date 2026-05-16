@@ -262,6 +262,18 @@ function revenueSeriesLabel(item: {
 	return `${company} end-'${yy} ARR`;
 }
 
+function shortPeriodLabel(period: string): string {
+	const [half, year] = period.split(" ");
+	return `${half} '${year.slice(2)}`;
+}
+
+const revenueLegendItems = [
+	{ label: "Anthropic half-year", color: "#0f766e", kind: "bar" },
+	{ label: "OpenAI half-year", color: "#2563eb", kind: "bar" },
+	{ label: "Anthropic end-of-half ARR", color: "#0f766e", kind: "line" },
+	{ label: "OpenAI end-of-half ARR", color: "#2563eb", kind: "line" },
+] as const;
+
 interface ScenarioButtonProps {
 	value: Scenario;
 	active: boolean;
@@ -362,8 +374,8 @@ function DealTable({ companyFilter }: { companyFilter: CompanyFilter }) {
 			? dealAnchors
 			: dealAnchors.filter((d) => d.company === companyFilter);
 	return (
-		<div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
-			<table className="min-w-full text-left text-sm">
+		<div className="w-full max-w-full overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+			<table className="w-max min-w-full text-left text-sm">
 				<thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
 					<tr>
 						<th className="px-4 py-3">Company</th>
@@ -726,7 +738,7 @@ export default function ComputeCapacityModel() {
 		revenueView === "gross" ? "gross / reported-style" : "net-retained";
 
 	return (
-		<div className="min-h-screen bg-slate-50 p-4 text-slate-950 md:p-8">
+		<div className="min-h-screen overflow-x-hidden bg-slate-50 p-4 text-slate-950 md:p-8">
 			<div className="mx-auto max-w-7xl space-y-6">
 				<header className="rounded-3xl bg-white p-6 shadow-sm md:p-8">
 					<div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between md:gap-4">
@@ -785,9 +797,9 @@ export default function ComputeCapacityModel() {
 				<Card className="rounded-3xl shadow-sm">
 					<CardContent className="p-0">
 						<details className="group">
-							<summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-5 md:p-6">
-								<div>
-									<h2 className="flex items-center gap-2 text-xl font-semibold">
+							<summary className="flex cursor-pointer list-none flex-col items-start justify-between gap-3 p-5 md:flex-row md:items-center md:p-6">
+								<div className="min-w-0">
+									<h2 className="flex flex-wrap items-center gap-2 text-xl font-semibold">
 										<span
 											className="inline-block transition-transform group-open:rotate-90"
 											aria-hidden
@@ -807,7 +819,7 @@ export default function ComputeCapacityModel() {
 										half-year; gross revenue is reported-style dollars in $B.
 									</p>
 								</div>
-								<div className="flex flex-wrap items-center gap-2">
+								<div className="flex flex-wrap items-center gap-2 md:justify-end">
 									<Button
 										variant={revenueView === "net" ? "default" : "outline"}
 										className="rounded-2xl"
@@ -830,9 +842,9 @@ export default function ComputeCapacityModel() {
 									</Button>
 								</div>
 							</summary>
-							<div className="space-y-5 px-5 pb-5 md:px-6 md:pb-6">
-								<div className="overflow-x-auto rounded-2xl border border-slate-200">
-									<table className="min-w-full text-sm">
+							<div className="hidden min-w-0 space-y-5 px-5 pb-5 group-open:block md:px-6 md:pb-6">
+								<div className="w-full max-w-full overflow-x-auto rounded-2xl border border-slate-200">
+									<table className="w-max min-w-full text-sm">
 										<thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
 											<tr>
 												<th
@@ -1245,11 +1257,20 @@ export default function ComputeCapacityModel() {
 							<ResponsiveContainer width="100%" height="100%">
 								<ComposedChart
 									data={revenueChartData}
-									margin={{ top: 10, right: 24, left: 0, bottom: 0 }}
+									margin={{ top: 10, right: 8, left: 4, bottom: 8 }}
 								>
 									<CartesianGrid strokeDasharray="3 3" />
-									<XAxis dataKey="period" />
-									<YAxis tickFormatter={(v) => `$${v}B`} />
+									<XAxis
+										dataKey="period"
+										tickFormatter={shortPeriodLabel}
+										tickMargin={8}
+										minTickGap={10}
+									/>
+									<YAxis
+										width={68}
+										tickMargin={8}
+										tickFormatter={(v) => `$${v}B`}
+									/>
 									<ReferenceArea
 										x1="H1 2026"
 										x2="H2 2027"
@@ -1264,7 +1285,6 @@ export default function ComputeCapacityModel() {
 										]}
 										itemSorter={(item) => -Number(item.value)}
 									/>
-									<Legend />
 									<Bar
 										dataKey="AnthropicRevenue"
 										name="Anthropic half-year"
@@ -1298,11 +1318,34 @@ export default function ComputeCapacityModel() {
 								</ComposedChart>
 							</ResponsiveContainer>
 						</div>
+						<div className="mt-3 grid gap-x-4 gap-y-2 text-sm leading-tight sm:grid-cols-2 lg:flex lg:flex-wrap lg:items-center">
+							{revenueLegendItems.map((item) => (
+								<div
+									key={item.label}
+									className="flex min-w-0 items-center gap-2 text-slate-700"
+								>
+									<span
+										className={`shrink-0 ${
+											item.kind === "bar"
+												? "h-3 w-3 rounded-sm"
+												: "h-0 w-5 border-t-2 border-dashed"
+										}`}
+										style={
+											item.kind === "bar"
+												? { backgroundColor: item.color }
+												: { borderColor: item.color }
+										}
+										aria-hidden
+									/>
+									<span className="min-w-0 truncate">{item.label}</span>
+								</div>
+							))}
+						</div>
 					</CardContent>
 				</Card>
 
-				<section className="grid gap-4 lg:grid-cols-2">
-					<Card className="rounded-3xl shadow-sm">
+				<section className="grid min-w-0 gap-4 lg:grid-cols-2">
+					<Card className="min-w-0 rounded-3xl shadow-sm">
 						<CardContent className="p-5">
 							<div className="mb-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
 								<div>
@@ -1321,7 +1364,7 @@ export default function ComputeCapacityModel() {
 									{scenario}
 								</Badge>
 							</div>
-							<div className="h-80">
+							<div className="h-80 min-w-0">
 								<ResponsiveContainer width="100%" height="100%">
 									<LineChart
 										data={rows}
@@ -1360,7 +1403,7 @@ export default function ComputeCapacityModel() {
 						</CardContent>
 					</Card>
 
-					<Card className="rounded-3xl shadow-sm">
+					<Card className="min-w-0 rounded-3xl shadow-sm">
 						<CardContent className="p-5">
 							<div className="mb-4">
 								<h2 className="text-xl font-semibold">
@@ -1371,8 +1414,8 @@ export default function ComputeCapacityModel() {
 									check.
 								</p>
 							</div>
-							<div className="overflow-x-auto rounded-2xl border border-slate-200">
-								<table className="min-w-full text-sm">
+							<div className="w-full max-w-full overflow-x-auto rounded-2xl border border-slate-200">
+								<table className="w-max min-w-full text-sm">
 									<thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
 										<tr>
 											<th className="px-4 py-3">Year</th>
