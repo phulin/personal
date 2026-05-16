@@ -1,10 +1,4 @@
-import {
-	DollarSign,
-	ExternalLink,
-	Gauge,
-	Info,
-	Zap,
-} from "lucide-react";
+import { DollarSign, ExternalLink, Gauge, Info, Zap } from "lucide-react";
 import { type ComponentType, useMemo, useState } from "react";
 import {
 	Bar,
@@ -13,6 +7,7 @@ import {
 	Legend,
 	Line,
 	LineChart,
+	ReferenceArea,
 	ResponsiveContainer,
 	Tooltip,
 	XAxis,
@@ -59,28 +54,27 @@ type ScenarioSeries = Record<Company, Record<Preset, number[]>>;
 // reuse the central values so toggling bull/bear only affects the forecast.
 const gwAssumptions: ScenarioSeries = {
 	Anthropic: {
-		bear: [0.06, 0.12, 0.23, 0.5, 0.6, 1.6, 2.6, 4.2],
-		central: [0.06, 0.12, 0.23, 0.5, 0.8, 2.4, 4.0, 6.8],
-		bull: [0.06, 0.12, 0.23, 0.5, 1.1, 3.2, 5.8, 10.0],
+		bear: [0.06, 0.12, 0.23, 0.5, 0.8, 2.4, 4.0, 6.8],
+		central: [0.06, 0.12, 0.23, 0.5, 1.1, 3.2, 5.8, 10.0],
+		bull: [0.06, 0.12, 0.23, 0.5, 1.5, 4.5, 8.0, 14.0],
 	},
 	OpenAI: {
-		bear: [0.5, 0.85, 1.4, 2.1, 2.0, 3.2, 5.0, 8.0],
-		central: [0.5, 0.85, 1.4, 2.1, 2.8, 5.0, 8.5, 13.5],
-		bull: [0.5, 0.85, 1.4, 2.1, 3.8, 7.0, 12.0, 20.0],
+		bear: [0.25, 0.44, 0.81, 1.4, 2.8, 5.0, 8.5, 13.5],
+		central: [0.25, 0.44, 0.81, 1.4, 3.8, 7.0, 12.0, 20.0],
+		bull: [0.25, 0.44, 0.81, 1.4, 5.5, 10.0, 18.0, 30.0],
 	},
 };
 
-const grossRevenueHalfYear: ScenarioSeries = {
-	Anthropic: {
-		bear: [0.12, 0.45, 1.4, 4.1, 14, 22, 32, 55],
-		central: [0.12, 0.45, 1.4, 4.1, 20, 35, 55, 85],
-		bull: [0.12, 0.45, 1.4, 4.1, 28, 52, 90, 145],
-	},
-	OpenAI: {
-		bear: [1.4, 2.3, 4.5, 8.5, 14, 20, 34, 55],
-		central: [1.4, 2.3, 4.5, 8.5, 22, 35, 58, 90],
-		bull: [1.4, 2.3, 4.5, 8.5, 32, 55, 92, 160],
-	},
+const grossRevenueHalfYear: Record<Company, number[]> = {
+	Anthropic: [0.12, 0.45, 1.4, 4.1],
+	OpenAI: [1.4, 2.3, 4.5, 8.5],
+};
+
+// Initial values for the editable forecast slots. Only consumed by "manual"
+// forecast mode; "blended" and "premium" recompute these on the fly.
+const initialGrossForecast: Record<Company, number[]> = {
+	Anthropic: [20, 35, 55, 85],
+	OpenAI: [22, 35, 58, 90],
 };
 
 interface DealAnchor {
@@ -480,16 +474,20 @@ function presetGw(s: Preset): CompanyValues {
 	};
 }
 
-function presetGross(s: Preset): CompanyValues {
+function presetGross(): CompanyValues {
 	return {
-		Anthropic: [...grossRevenueHalfYear.Anthropic[s]],
-		OpenAI: [...grossRevenueHalfYear.OpenAI[s]],
+		Anthropic: [
+			...grossRevenueHalfYear.Anthropic,
+			...initialGrossForecast.Anthropic,
+		],
+		OpenAI: [...grossRevenueHalfYear.OpenAI, ...initialGrossForecast.OpenAI],
 	};
 }
 
 export default function ComputeCapacityModel() {
 	const [scenario, setScenario] = useState<Scenario>("central");
 	const [revenueView, setRevenueView] = useState<RevenueView>("net");
+	const [chartRevenueView, setChartRevenueView] = useState<RevenueView>("net");
 	const [companyFilter, setCompanyFilter] = useState<CompanyFilter>("All");
 	const [anthropicHaircut, setAnthropicHaircut] = useState(20);
 	const [openaiHaircut, setOpenaiHaircut] = useState(15);
@@ -497,15 +495,15 @@ export default function ComputeCapacityModel() {
 		presetGw("central"),
 	);
 	const [grossValues, setGrossValues] = useState<CompanyValues>(() =>
-		presetGross("central"),
+		presetGross(),
 	);
-	const [forecastMode, setForecastMode] = useState<ForecastMode>("blended");
+	const [forecastMode, setForecastMode] = useState<ForecastMode>("premium");
 	const [forecastPremium, setForecastPremium] = useState(1.8);
 
 	function loadPreset(s: Preset) {
 		setScenario(s);
 		setGwValues(presetGw(s));
-		setGrossValues(presetGross(s));
+		setGrossValues(presetGross());
 		setAnthropicHaircut(20);
 		setOpenaiHaircut(15);
 	}
@@ -530,8 +528,7 @@ export default function ComputeCapacityModel() {
 			anthropicNetDpgy,
 			openaiNetDpgy,
 			blendedNetDpgy,
-			observedPremium:
-				openaiNetDpgy > 0 ? anthropicNetDpgy / openaiNetDpgy : 0,
+			observedPremium: openaiNetDpgy > 0 ? anthropicNetDpgy / openaiNetDpgy : 0,
 		};
 	}, [gwValues, grossValues, anthropicHaircut, openaiHaircut]);
 
@@ -630,16 +627,77 @@ export default function ComputeCapacityModel() {
 	}, [gwValues, effectiveGross, revenueView, anthropicHaircut, openaiHaircut]);
 
 	const revenueChartData = useMemo(() => {
-		return rows.map((r, i) => {
-			const next = rows[i + 1];
-			if (!next) return r;
+		const baseRows = rows.map((r) => {
+			const aRev =
+				chartRevenueView === "gross" ? r.AnthropicGross : r.AnthropicNet;
+			const oRev = chartRevenueView === "gross" ? r.OpenAIGross : r.OpenAINet;
+			return { ...r, AnthropicRevenue: aRev, OpenAIRevenue: oRev };
+		});
+
+		const lastIdx = PERIODS.length - 1;
+		const prevIdx = lastIdx - 1;
+		const aHaircutFrac = 1 - anthropicHaircut / 100;
+		const oHaircutFrac = 1 - openaiHaircut / 100;
+		const aH1_28_gw =
+			2 * gwValues.Anthropic[lastIdx] - gwValues.Anthropic[prevIdx];
+		const oH1_28_gw = 2 * gwValues.OpenAI[lastIdx] - gwValues.OpenAI[prevIdx];
+		const aH1_28_gwYears = aH1_28_gw * 0.5;
+		const oH1_28_gwYears = oH1_28_gw * 0.5;
+		let aH1_28_net: number;
+		let oH1_28_net: number;
+		if (forecastMode === "blended") {
+			aH1_28_net = historicalBaselines.blendedNetDpgy * aH1_28_gwYears;
+			oH1_28_net = historicalBaselines.blendedNetDpgy * oH1_28_gwYears;
+		} else if (forecastMode === "premium") {
+			aH1_28_net =
+				historicalBaselines.openaiNetDpgy * forecastPremium * aH1_28_gwYears;
+			oH1_28_net = historicalBaselines.openaiNetDpgy * oH1_28_gwYears;
+		} else {
+			const aLastGwYears = gwValues.Anthropic[lastIdx] * 0.5;
+			const oLastGwYears = gwValues.OpenAI[lastIdx] * 0.5;
+			const aDpgy =
+				aLastGwYears > 0
+					? (effectiveGross.Anthropic[lastIdx] * aHaircutFrac) / aLastGwYears
+					: 0;
+			const oDpgy =
+				oLastGwYears > 0
+					? (effectiveGross.OpenAI[lastIdx] * oHaircutFrac) / oLastGwYears
+					: 0;
+			aH1_28_net = aDpgy * aH1_28_gwYears;
+			oH1_28_net = oDpgy * oH1_28_gwYears;
+		}
+		const aH1_28_gross = aHaircutFrac > 0 ? aH1_28_net / aHaircutFrac : 0;
+		const oH1_28_gross = oHaircutFrac > 0 ? oH1_28_net / oHaircutFrac : 0;
+		const aH1_28_rev = chartRevenueView === "gross" ? aH1_28_gross : aH1_28_net;
+		const oH1_28_rev = chartRevenueView === "gross" ? oH1_28_gross : oH1_28_net;
+
+		return baseRows.map((r, i) => {
+			const next = baseRows[i + 1];
+			if (next) {
+				return {
+					...r,
+					AnthropicARR: r.AnthropicRevenue + next.AnthropicRevenue,
+					OpenAIARR: r.OpenAIRevenue + next.OpenAIRevenue,
+				};
+			}
 			return {
 				...r,
-				AnthropicARR: r.AnthropicRevenue + next.AnthropicRevenue,
-				OpenAIARR: r.OpenAIRevenue + next.OpenAIRevenue,
+				AnthropicARR:
+					2 * Math.sqrt(Math.max(0, r.AnthropicRevenue * aH1_28_rev)),
+				OpenAIARR: 2 * Math.sqrt(Math.max(0, r.OpenAIRevenue * oH1_28_rev)),
 			};
 		});
-	}, [rows]);
+	}, [
+		rows,
+		chartRevenueView,
+		gwValues,
+		effectiveGross,
+		forecastMode,
+		forecastPremium,
+		anthropicHaircut,
+		openaiHaircut,
+		historicalBaselines,
+	]);
 
 	const fy: Record<number, YearAgg> = useMemo(() => {
 		const out: Record<number, YearAgg> = {};
@@ -791,8 +849,7 @@ export default function ComputeCapacityModel() {
 													colSpan={2}
 													className="border-l border-slate-200 px-3 py-2 text-center"
 												>
-													Implied{" "}
-													{revenueView === "gross" ? "gross" : "net"}{" "}
+													Implied {revenueView === "gross" ? "gross" : "net"}{" "}
 													$/GW-year ($B)
 												</th>
 											</tr>
@@ -957,11 +1014,7 @@ export default function ComputeCapacityModel() {
 											step={1}
 											onValueChange={(v) => {
 												if (revenueView === "net") {
-													rescaleGrossForHaircut(
-														"OpenAI",
-														openaiHaircut,
-														v[0],
-													);
+													rescaleGrossForHaircut("OpenAI", openaiHaircut, v[0]);
 												}
 												setOpenaiHaircut(v[0]);
 												setScenario("custom");
@@ -996,8 +1049,8 @@ export default function ComputeCapacityModel() {
 									Forecast $/GW methodology
 								</h2>
 								<p className="mt-1 text-sm text-slate-500">
-									Two ways to think about projecting revenue from 2026H2
-									onward. Historical periods (2024–2025) remain as observed.
+									Two ways to think about projecting revenue from 2026H2 onward.
+									Historical periods (2024–2025) remain as observed.
 								</p>
 							</div>
 							<div className="flex flex-wrap gap-2">
@@ -1040,11 +1093,11 @@ export default function ComputeCapacityModel() {
 									1. Blended historical $/GW
 								</div>
 								<p className="text-slate-700">
-									Pool 2024–2025 net-retained revenue across both companies
-									and divide by total GW-years to get a single $/GW-year.
-									Forecast revenue for each company is just that baseline ×
-									their forecast GW. Assumes Anthropic and OpenAI converge on
-									the same monetization per unit of compute.
+									Pool 2024–2025 net-retained revenue across both companies and
+									divide by total GW-years to get a single $/GW-year. Forecast
+									revenue for each company is just that baseline × their
+									forecast GW. Assumes Anthropic and OpenAI converge on the same
+									monetization per unit of compute.
 								</p>
 								<p className="mt-2 text-xs text-slate-500">
 									Current blended baseline:{" "}
@@ -1071,8 +1124,8 @@ export default function ComputeCapacityModel() {
 									Historical data shows Anthropic earning meaningfully more per
 									GW than OpenAI even after the net-retained haircut —
 									reflecting enterprise/API mix vs consumer/free. This mode
-									anchors the forecast on OpenAI's historical $/GW and lets
-									you set the Anthropic premium directly.
+									anchors the forecast on OpenAI's historical $/GW and lets you
+									set the Anthropic premium directly.
 								</p>
 								<p className="mt-2 text-xs text-slate-500">
 									Observed historical premium:{" "}
@@ -1107,16 +1160,16 @@ export default function ComputeCapacityModel() {
 								/>
 								<p className="text-xs text-slate-500">
 									1.0× means Anthropic and OpenAI earn the same net-retained
-									dollars per GW in the forecast. Higher values bake in
-									durable enterprise/API premium.
+									dollars per GW in the forecast. Higher values bake in durable
+									enterprise/API premium.
 								</p>
 							</div>
 						)}
 
 						{forecastMode !== "manual" && (
 							<p className="text-xs text-slate-500">
-								Forecast revenue inputs above are derived and read-only in
-								this mode. Adjust haircuts or GW assumptions to change them, or
+								Forecast revenue inputs above are derived and read-only in this
+								mode. Adjust haircuts or GW assumptions to change them, or
 								switch back to Manual to edit revenue directly.
 							</p>
 						)}
@@ -1152,13 +1205,32 @@ export default function ComputeCapacityModel() {
 
 				<Card className="rounded-3xl shadow-sm">
 					<CardContent className="p-5">
-						<div className="mb-4">
-							<h2 className="text-xl font-semibold">
-								Half-year revenue implied by scenario
-							</h2>
-							<p className="text-sm text-slate-500">
-								Revenue is recognized dollars for the half-year, not exit ARR.
-							</p>
+						<div className="mb-4 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+							<div>
+								<h2 className="text-xl font-semibold">
+									Half-year revenue implied by scenario
+								</h2>
+								<p className="text-sm text-slate-500">
+									Revenue is recognized dollars for the half-year, not exit ARR.
+									Shaded region marks projected periods.
+								</p>
+							</div>
+							<div className="flex flex-wrap items-center gap-2">
+								<Button
+									variant={chartRevenueView === "net" ? "default" : "outline"}
+									className="rounded-2xl"
+									onClick={() => setChartRevenueView("net")}
+								>
+									Net retained
+								</Button>
+								<Button
+									variant={chartRevenueView === "gross" ? "default" : "outline"}
+									className="rounded-2xl"
+									onClick={() => setChartRevenueView("gross")}
+								>
+									Gross
+								</Button>
+							</div>
 						</div>
 						<div className="h-80">
 							<ResponsiveContainer width="100%" height="100%">
@@ -1169,6 +1241,13 @@ export default function ComputeCapacityModel() {
 									<CartesianGrid strokeDasharray="3 3" />
 									<XAxis dataKey="period" />
 									<YAxis tickFormatter={(v) => `$${v}B`} />
+									<ReferenceArea
+										x1="H1 2026"
+										x2="H2 2027"
+										fill="#94a3b8"
+										fillOpacity={0.15}
+										ifOverflow="extendDomain"
+									/>
 									<Tooltip
 										formatter={(value, _name, item) => [
 											currency(Number(value)),
@@ -1334,7 +1413,6 @@ export default function ComputeCapacityModel() {
 						</CardContent>
 					</Card>
 				</section>
-
 
 				<section className="space-y-4">
 					<div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
