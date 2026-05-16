@@ -1,5 +1,4 @@
 import {
-	Database,
 	DollarSign,
 	ExternalLink,
 	Gauge,
@@ -9,8 +8,8 @@ import {
 import { type ComponentType, useMemo, useState } from "react";
 import {
 	Bar,
-	BarChart,
 	CartesianGrid,
+	ComposedChart,
 	Legend,
 	Line,
 	LineChart,
@@ -29,6 +28,10 @@ type Scenario = Preset | "custom";
 type Company = "Anthropic" | "OpenAI";
 type RevenueView = "net" | "gross";
 type CompanyFilter = "All" | Company;
+type ForecastMode = "manual" | "blended" | "premium";
+
+// First N periods treated as historical and used to anchor forecast $/GW.
+const HISTORICAL_PERIODS = 4;
 
 interface Period {
 	key: string;
@@ -52,29 +55,31 @@ const PRESETS: Preset[] = ["bear", "central", "bull"];
 
 type ScenarioSeries = Record<Company, Record<Preset, number[]>>;
 
+// 2024H1, 2024H2, 2025H1, 2025H2 are completed periods — scenario variants
+// reuse the central values so toggling bull/bear only affects the forecast.
 const gwAssumptions: ScenarioSeries = {
 	Anthropic: {
-		bear: [0.04, 0.08, 0.16, 0.32, 0.6, 1.6, 2.6, 4.2],
+		bear: [0.06, 0.12, 0.23, 0.5, 0.6, 1.6, 2.6, 4.2],
 		central: [0.06, 0.12, 0.23, 0.5, 0.8, 2.4, 4.0, 6.8],
-		bull: [0.08, 0.18, 0.32, 0.72, 1.1, 3.2, 5.8, 10.0],
+		bull: [0.06, 0.12, 0.23, 0.5, 1.1, 3.2, 5.8, 10.0],
 	},
 	OpenAI: {
-		bear: [0.35, 0.55, 0.9, 1.4, 2.0, 3.2, 5.0, 8.0],
+		bear: [0.5, 0.85, 1.4, 2.1, 2.0, 3.2, 5.0, 8.0],
 		central: [0.5, 0.85, 1.4, 2.1, 2.8, 5.0, 8.5, 13.5],
-		bull: [0.7, 1.2, 1.9, 3.0, 3.8, 7.0, 12.0, 20.0],
+		bull: [0.5, 0.85, 1.4, 2.1, 3.8, 7.0, 12.0, 20.0],
 	},
 };
 
 const grossRevenueHalfYear: ScenarioSeries = {
 	Anthropic: {
-		bear: [0.08, 0.25, 0.9, 3.2, 14, 22, 32, 55],
+		bear: [0.12, 0.45, 1.4, 4.1, 14, 22, 32, 55],
 		central: [0.12, 0.45, 1.4, 4.1, 20, 35, 55, 85],
-		bull: [0.2, 0.8, 2.0, 5.8, 28, 52, 90, 145],
+		bull: [0.12, 0.45, 1.4, 4.1, 28, 52, 90, 145],
 	},
 	OpenAI: {
-		bear: [1.0, 1.8, 3.2, 6.0, 14, 20, 34, 55],
+		bear: [1.4, 2.3, 4.5, 8.5, 14, 20, 34, 55],
 		central: [1.4, 2.3, 4.5, 8.5, 22, 35, 58, 90],
-		bull: [2.0, 3.0, 6.0, 12.0, 32, 55, 92, 160],
+		bull: [1.4, 2.3, 4.5, 8.5, 32, 55, 92, 160],
 	},
 };
 
@@ -248,6 +253,21 @@ function number(value: number | null | undefined, digits = 1): string {
 	return (value as number).toFixed(digits);
 }
 
+function revenueSeriesLabel(item: {
+	dataKey?: string | number;
+	payload?: { year?: number; key?: string };
+}): string {
+	const key = String(item.dataKey ?? "");
+	const company = key.startsWith("Anthropic") ? "Anthropic" : "OpenAI";
+	const year = item.payload?.year ?? 0;
+	const yy = String(year).slice(2);
+	const isH1 = (item.payload?.key ?? "").endsWith("H1");
+	const isARR = key.endsWith("ARR");
+	if (!isARR) return `${company} ${isH1 ? "H1" : "H2"} '${yy}`;
+	if (isH1) return `${company} end-H1 '${yy} ARR`;
+	return `${company} end-'${yy} ARR`;
+}
+
 interface ScenarioButtonProps {
 	value: Scenario;
 	active: boolean;
@@ -277,6 +297,7 @@ interface NumberInputProps {
 	onChange: (next: number) => void;
 	step?: number;
 	min?: number;
+	disabled?: boolean;
 }
 
 function NumberInput({
@@ -284,18 +305,27 @@ function NumberInput({
 	onChange,
 	step = 0.01,
 	min = 0,
+	disabled = false,
 }: NumberInputProps) {
+	const displayValue = Number.isFinite(value) ? value : 0;
 	return (
 		<input
 			type="number"
-			value={Number.isFinite(value) ? value : 0}
+			value={
+				disabled ? Number(displayValue.toFixed(2)) : displayValue
+			}
 			step={step}
 			min={min}
+			disabled={disabled}
 			onChange={(e) => {
 				const v = Number.parseFloat(e.target.value);
 				onChange(Number.isFinite(v) ? v : 0);
 			}}
-			className="w-full rounded-md border border-slate-200 bg-white px-2 py-1 text-right text-sm tabular-nums focus:border-slate-400 focus:outline-none"
+			className={`w-full rounded-md border px-2 py-1 text-right text-sm tabular-nums focus:outline-none ${
+				disabled
+					? "border-slate-200 bg-slate-100 text-slate-500"
+					: "border-slate-200 bg-white focus:border-slate-400"
+			}`}
 		/>
 	);
 }
@@ -465,6 +495,8 @@ export default function ComputeCapacityModel() {
 	const [grossValues, setGrossValues] = useState<CompanyValues>(() =>
 		presetGross("central"),
 	);
+	const [forecastMode, setForecastMode] = useState<ForecastMode>("blended");
+	const [forecastPremium, setForecastPremium] = useState(1.8);
 
 	function loadPreset(s: Preset) {
 		setScenario(s);
@@ -473,6 +505,64 @@ export default function ComputeCapacityModel() {
 		setAnthropicHaircut(20);
 		setOpenaiHaircut(15);
 	}
+
+	const historicalBaselines = useMemo(() => {
+		let aNetSum = 0;
+		let oNetSum = 0;
+		let aGwYears = 0;
+		let oGwYears = 0;
+		for (let i = 0; i < HISTORICAL_PERIODS; i++) {
+			aNetSum += grossValues.Anthropic[i] * (1 - anthropicHaircut / 100);
+			oNetSum += grossValues.OpenAI[i] * (1 - openaiHaircut / 100);
+			aGwYears += gwValues.Anthropic[i] * 0.5;
+			oGwYears += gwValues.OpenAI[i] * 0.5;
+		}
+		const anthropicNetDpgy = aGwYears > 0 ? aNetSum / aGwYears : 0;
+		const openaiNetDpgy = oGwYears > 0 ? oNetSum / oGwYears : 0;
+		const totalGwYears = aGwYears + oGwYears;
+		const blendedNetDpgy =
+			totalGwYears > 0 ? (aNetSum + oNetSum) / totalGwYears : 0;
+		return {
+			anthropicNetDpgy,
+			openaiNetDpgy,
+			blendedNetDpgy,
+			observedPremium:
+				openaiNetDpgy > 0 ? anthropicNetDpgy / openaiNetDpgy : 0,
+		};
+	}, [gwValues, grossValues, anthropicHaircut, openaiHaircut]);
+
+	const effectiveGross: CompanyValues = useMemo(() => {
+		if (forecastMode === "manual") return grossValues;
+		const aHaircutFrac = 1 - anthropicHaircut / 100;
+		const oHaircutFrac = 1 - openaiHaircut / 100;
+		const anthropic = [...grossValues.Anthropic];
+		const openai = [...grossValues.OpenAI];
+		for (let i = HISTORICAL_PERIODS; i < PERIODS.length; i++) {
+			const aGwYears = gwValues.Anthropic[i] * 0.5;
+			const oGwYears = gwValues.OpenAI[i] * 0.5;
+			if (forecastMode === "blended") {
+				const aNet = historicalBaselines.blendedNetDpgy * aGwYears;
+				const oNet = historicalBaselines.blendedNetDpgy * oGwYears;
+				anthropic[i] = aHaircutFrac > 0 ? aNet / aHaircutFrac : 0;
+				openai[i] = oHaircutFrac > 0 ? oNet / oHaircutFrac : 0;
+			} else {
+				const oNet = historicalBaselines.openaiNetDpgy * oGwYears;
+				const aNet =
+					historicalBaselines.openaiNetDpgy * forecastPremium * aGwYears;
+				anthropic[i] = aHaircutFrac > 0 ? aNet / aHaircutFrac : 0;
+				openai[i] = oHaircutFrac > 0 ? oNet / oHaircutFrac : 0;
+			}
+		}
+		return { Anthropic: anthropic, OpenAI: openai };
+	}, [
+		forecastMode,
+		forecastPremium,
+		grossValues,
+		gwValues,
+		anthropicHaircut,
+		openaiHaircut,
+		historicalBaselines,
+	]);
 
 	function updateGw(company: Company, i: number, value: number) {
 		setGwValues((prev) => {
@@ -496,8 +586,8 @@ export default function ComputeCapacityModel() {
 		return PERIODS.map((p, i) => {
 			const agw = gwValues.Anthropic[i];
 			const ogw = gwValues.OpenAI[i];
-			const aGross = grossValues.Anthropic[i];
-			const oGross = grossValues.OpenAI[i];
+			const aGross = effectiveGross.Anthropic[i];
+			const oGross = effectiveGross.OpenAI[i];
 			const aNet = aGross * (1 - anthropicHaircut / 100);
 			const oNet = oGross * (1 - openaiHaircut / 100);
 			const aRev = revenueView === "gross" ? aGross : aNet;
@@ -518,7 +608,19 @@ export default function ComputeCapacityModel() {
 				OpenAIRevPerGWYear: ogw > 0 ? oRev / (ogw * 0.5) : null,
 			};
 		});
-	}, [gwValues, grossValues, revenueView, anthropicHaircut, openaiHaircut]);
+	}, [gwValues, effectiveGross, revenueView, anthropicHaircut, openaiHaircut]);
+
+	const revenueChartData = useMemo(() => {
+		return rows.map((r, i) => {
+			const next = rows[i + 1];
+			if (!next) return r;
+			return {
+				...r,
+				AnthropicARR: r.AnthropicRevenue + next.AnthropicRevenue,
+				OpenAIARR: r.OpenAIRevenue + next.OpenAIRevenue,
+			};
+		});
+	}, [rows]);
 
 	const fy: Record<number, YearAgg> = useMemo(() => {
 		const out: Record<number, YearAgg> = {};
@@ -550,53 +652,48 @@ export default function ComputeCapacityModel() {
 		<div className="min-h-screen bg-slate-50 p-4 text-slate-950 md:p-8">
 			<div className="mx-auto max-w-7xl space-y-6">
 				<header className="rounded-3xl bg-white p-6 shadow-sm md:p-8">
-					<div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-						<div>
-							<div className="mb-3 flex flex-wrap gap-2">
-								<Badge className="rounded-full">AI compute model</Badge>
-								<Badge variant="secondary" className="rounded-full">
-									Updated May 2026
-								</Badge>
-								<Badge variant="outline" className="rounded-full">
-									Units: average usable AI GW
-								</Badge>
-							</div>
-							<h1 className="max-w-4xl text-3xl font-semibold tracking-tight md:text-5xl">
-								Anthropic vs. OpenAI revenue headroom from committed compute
-							</h1>
-							<p className="mt-4 max-w-3xl text-sm leading-6 text-slate-600 md:text-base">
-								GW of usable AI compute is a hard ceiling on revenue: every
-								dollar booked has to be served from somewhere. This model takes
-								public deal anchors as a forward GW supply curve, divides
-								reported (or net-retained) revenue by that curve, and asks
-								whether the implied $/GW-year is plausible. Headline run-rate
-								numbers that imply a $/GW-year far above peers are either
-								evidence of premium monetization, gross-of-channel accounting,
-								or undercounted capacity — the controls below let you stress
-								each.
-							</p>
+					<div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between md:gap-4">
+						<div className="flex flex-wrap gap-2">
+							<Badge className="rounded-full">AI compute model</Badge>
+							<Badge variant="secondary" className="rounded-full">
+								Updated May 2026
+							</Badge>
+							<Badge variant="outline" className="rounded-full">
+								Units: average usable AI GW
+							</Badge>
 						</div>
-						<div className="flex shrink-0 flex-col items-end gap-2">
-							<div className="flex flex-wrap gap-2">
-								{PRESETS.map((s) => (
-									<ScenarioButton
-										key={s}
-										value={s}
-										active={scenario === s}
-										onClick={loadPreset}
-									/>
-								))}
-								<Button
-									variant={scenario === "custom" ? "default" : "outline"}
-									className="rounded-2xl capitalize"
-									disabled={scenario !== "custom"}
-									aria-pressed={scenario === "custom"}
-								>
-									custom
-								</Button>
-							</div>
+						<div className="flex shrink-0 flex-wrap gap-2 md:justify-end">
+							{PRESETS.map((s) => (
+								<ScenarioButton
+									key={s}
+									value={s}
+									active={scenario === s}
+									onClick={loadPreset}
+								/>
+							))}
+							<Button
+								variant={scenario === "custom" ? "default" : "outline"}
+								className="rounded-2xl capitalize"
+								disabled={scenario !== "custom"}
+								aria-pressed={scenario === "custom"}
+							>
+								custom
+							</Button>
 						</div>
 					</div>
+					<h1 className="mt-4 text-3xl font-semibold tracking-tight md:text-5xl">
+						Anthropic vs. OpenAI revenue headroom from committed compute
+					</h1>
+					<p className="mt-4 text-sm leading-6 text-slate-600 md:text-base">
+						GW of usable AI compute is a hard ceiling on revenue: every dollar
+						booked has to be served from somewhere. This model takes public deal
+						anchors as a forward GW supply curve, divides reported (or
+						net-retained) revenue by that curve, and asks whether the implied
+						$/GW-year is plausible. Headline run-rate numbers that imply a
+						$/GW-year far above peers are either evidence of premium
+						monetization, gross-of-channel accounting, or undercounted capacity
+						— the controls below let you stress each.
+					</p>
 				</header>
 
 				<Card className="rounded-3xl shadow-sm">
@@ -620,9 +717,8 @@ export default function ComputeCapacityModel() {
 										</Badge>
 									</h2>
 									<p className="mt-1 text-sm text-slate-500">
-										All inputs are editable. GW values are average usable AI
-										gigawatts for each half-year; gross revenue is
-										reported-style dollars in $B.
+										GW values are average usable AI gigawatts for each
+										half-year; gross revenue is reported-style dollars in $B.
 									</p>
 								</div>
 								<div className="flex flex-wrap items-center gap-2">
@@ -671,8 +767,20 @@ export default function ComputeCapacityModel() {
 												>
 													Gross half-year revenue ($B)
 												</th>
+												<th
+													colSpan={2}
+													className="border-l border-slate-200 px-3 py-2 text-center"
+												>
+													Implied gross $/GW-year ($B)
+												</th>
 											</tr>
 											<tr>
+												<th className="border-l border-slate-200 px-3 py-2 text-right font-medium">
+													Anthropic
+												</th>
+												<th className="px-3 py-2 text-right font-medium">
+													OpenAI
+												</th>
 												<th className="border-l border-slate-200 px-3 py-2 text-right font-medium">
 													Anthropic
 												</th>
@@ -688,39 +796,67 @@ export default function ComputeCapacityModel() {
 											</tr>
 										</thead>
 										<tbody className="divide-y divide-slate-100 bg-white">
-											{PERIODS.map((p, i) => (
-												<tr key={p.key}>
-													<td className="px-3 py-2 font-medium text-slate-700">
-														{p.label}
-													</td>
-													<td className="w-28 border-l border-slate-200 px-2 py-1.5">
-														<NumberInput
-															value={gwValues.Anthropic[i]}
-															onChange={(v) => updateGw("Anthropic", i, v)}
-														/>
-													</td>
-													<td className="w-28 px-2 py-1.5">
-														<NumberInput
-															value={gwValues.OpenAI[i]}
-															onChange={(v) => updateGw("OpenAI", i, v)}
-														/>
-													</td>
-													<td className="w-28 border-l border-slate-200 px-2 py-1.5">
-														<NumberInput
-															value={grossValues.Anthropic[i]}
-															onChange={(v) => updateGross("Anthropic", i, v)}
-															step={0.1}
-														/>
-													</td>
-													<td className="w-28 px-2 py-1.5">
-														<NumberInput
-															value={grossValues.OpenAI[i]}
-															onChange={(v) => updateGross("OpenAI", i, v)}
-															step={0.1}
-														/>
-													</td>
-												</tr>
-											))}
+											{PERIODS.map((p, i) => {
+												const aGw = gwValues.Anthropic[i];
+												const oGw = gwValues.OpenAI[i];
+												const aDpgy =
+													aGw > 0
+														? effectiveGross.Anthropic[i] / (aGw * 0.5)
+														: 0;
+												const oDpgy =
+													oGw > 0
+														? effectiveGross.OpenAI[i] / (oGw * 0.5)
+														: 0;
+												return (
+													<tr key={p.key}>
+														<td className="px-3 py-2 font-medium text-slate-700">
+															{p.label}
+														</td>
+														<td className="w-28 border-l border-slate-200 px-2 py-1.5">
+															<NumberInput
+																value={aGw}
+																onChange={(v) => updateGw("Anthropic", i, v)}
+															/>
+														</td>
+														<td className="w-28 px-2 py-1.5">
+															<NumberInput
+																value={oGw}
+																onChange={(v) => updateGw("OpenAI", i, v)}
+															/>
+														</td>
+														<td className="w-28 border-l border-slate-200 px-2 py-1.5">
+															<NumberInput
+																value={effectiveGross.Anthropic[i]}
+																onChange={(v) =>
+																	updateGross("Anthropic", i, v)
+																}
+																step={0.1}
+																disabled={
+																	forecastMode !== "manual" &&
+																	i >= HISTORICAL_PERIODS
+																}
+															/>
+														</td>
+														<td className="w-28 px-2 py-1.5">
+															<NumberInput
+																value={effectiveGross.OpenAI[i]}
+																onChange={(v) => updateGross("OpenAI", i, v)}
+																step={0.1}
+																disabled={
+																	forecastMode !== "manual" &&
+																	i >= HISTORICAL_PERIODS
+																}
+															/>
+														</td>
+														<td className="w-28 border-l border-slate-200 px-3 py-2 text-right tabular-nums text-slate-600">
+															{number(aDpgy, 2)}
+														</td>
+														<td className="w-28 px-3 py-2 text-right tabular-nums text-slate-600">
+															{number(oDpgy, 2)}
+														</td>
+													</tr>
+												);
+											})}
 										</tbody>
 									</table>
 								</div>
@@ -790,6 +926,141 @@ export default function ComputeCapacityModel() {
 					</CardContent>
 				</Card>
 
+				<Card className="rounded-3xl shadow-sm">
+					<CardContent className="space-y-4 p-5 md:p-6">
+						<div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+							<div>
+								<h2 className="text-xl font-semibold">
+									Forecast $/GW methodology
+								</h2>
+								<p className="mt-1 text-sm text-slate-500">
+									Two ways to think about projecting revenue from 2026H2
+									onward. Historical periods (2024–2025) remain as observed.
+								</p>
+							</div>
+							<div className="flex flex-wrap gap-2">
+								<Button
+									variant={forecastMode === "manual" ? "default" : "outline"}
+									className="rounded-2xl"
+									onClick={() => setForecastMode("manual")}
+								>
+									Manual
+								</Button>
+								<Button
+									variant={forecastMode === "blended" ? "default" : "outline"}
+									className="rounded-2xl"
+									onClick={() => setForecastMode("blended")}
+								>
+									Blended baseline
+								</Button>
+								<Button
+									variant={forecastMode === "premium" ? "default" : "outline"}
+									className="rounded-2xl"
+									onClick={() => setForecastMode("premium")}
+								>
+									Anthropic premium
+								</Button>
+							</div>
+						</div>
+
+						<div className="grid gap-3 md:grid-cols-2">
+							<button
+								type="button"
+								aria-pressed={forecastMode === "blended"}
+								onClick={() => setForecastMode("blended")}
+								className={`rounded-2xl border p-4 text-left text-sm transition hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-400 ${
+									forecastMode === "blended"
+										? "border-slate-900 bg-slate-50"
+										: "border-slate-200 bg-white"
+								}`}
+							>
+								<div className="mb-1 font-semibold">
+									1. Blended historical $/GW
+								</div>
+								<p className="text-slate-700">
+									Pool 2024–2025 net-retained revenue across both companies
+									and divide by total GW-years to get a single $/GW-year.
+									Forecast revenue for each company is just that baseline ×
+									their forecast GW. Assumes Anthropic and OpenAI converge on
+									the same monetization per unit of compute.
+								</p>
+								<p className="mt-2 text-xs text-slate-500">
+									Current blended baseline:{" "}
+									<span className="font-semibold text-slate-700">
+										{currency(historicalBaselines.blendedNetDpgy)}/GW-year
+									</span>
+									.
+								</p>
+							</button>
+							<button
+								type="button"
+								aria-pressed={forecastMode === "premium"}
+								onClick={() => setForecastMode("premium")}
+								className={`rounded-2xl border p-4 text-left text-sm transition hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-400 ${
+									forecastMode === "premium"
+										? "border-slate-900 bg-slate-50"
+										: "border-slate-200 bg-white"
+								}`}
+							>
+								<div className="mb-1 font-semibold">
+									2. Anthropic premium over OpenAI
+								</div>
+								<p className="text-slate-700">
+									Historical data shows Anthropic earning meaningfully more per
+									GW than OpenAI even after the net-retained haircut —
+									reflecting enterprise/API mix vs consumer/free. This mode
+									anchors the forecast on OpenAI's historical $/GW and lets
+									you set the Anthropic premium directly.
+								</p>
+								<p className="mt-2 text-xs text-slate-500">
+									Observed historical premium:{" "}
+									<span className="font-semibold text-slate-700">
+										{number(historicalBaselines.observedPremium, 2)}×
+									</span>
+									. OpenAI historical baseline:{" "}
+									<span className="font-semibold text-slate-700">
+										{currency(historicalBaselines.openaiNetDpgy)}/GW-year
+									</span>
+									.
+								</p>
+							</button>
+						</div>
+
+						{forecastMode === "premium" && (
+							<div className="space-y-3 rounded-2xl border border-slate-200 p-4">
+								<div className="flex items-center justify-between">
+									<span className="font-medium">
+										Forecast Anthropic $/GW premium
+									</span>
+									<span className="text-sm font-semibold">
+										{forecastPremium.toFixed(2)}×
+									</span>
+								</div>
+								<Slider
+									value={[forecastPremium]}
+									min={1}
+									max={3}
+									step={0.05}
+									onValueChange={(v) => setForecastPremium(v[0])}
+								/>
+								<p className="text-xs text-slate-500">
+									1.0× means Anthropic and OpenAI earn the same net-retained
+									dollars per GW in the forecast. Higher values bake in
+									durable enterprise/API premium.
+								</p>
+							</div>
+						)}
+
+						{forecastMode !== "manual" && (
+							<p className="text-xs text-slate-500">
+								Forecast revenue inputs above are derived and read-only in
+								this mode. Adjust haircuts or GW assumptions to change them, or
+								switch back to Manual to edit revenue directly.
+							</p>
+						)}
+					</CardContent>
+				</Card>
+
 				<section className="grid gap-4 md:grid-cols-4">
 					<MetricCard
 						icon={Zap}
@@ -829,34 +1100,52 @@ export default function ComputeCapacityModel() {
 						</div>
 						<div className="h-80">
 							<ResponsiveContainer width="100%" height="100%">
-								<BarChart
-									data={rows}
+								<ComposedChart
+									data={revenueChartData}
 									margin={{ top: 10, right: 24, left: 0, bottom: 0 }}
 								>
 									<CartesianGrid strokeDasharray="3 3" />
 									<XAxis dataKey="period" />
 									<YAxis tickFormatter={(v) => `$${v}B`} />
 									<Tooltip
-										formatter={(value, name) => [
+										formatter={(value, _name, item) => [
 											currency(Number(value)),
-											name as string,
+											revenueSeriesLabel(item),
 										]}
 										itemSorter={(item) => -Number(item.value)}
 									/>
 									<Legend />
 									<Bar
 										dataKey="AnthropicRevenue"
-										name="Anthropic"
+										name="Anthropic half-year"
 										fill="#0f766e"
 										radius={[8, 8, 0, 0]}
 									/>
 									<Bar
 										dataKey="OpenAIRevenue"
-										name="OpenAI"
+										name="OpenAI half-year"
 										fill="#2563eb"
 										radius={[8, 8, 0, 0]}
 									/>
-								</BarChart>
+									<Line
+										type="monotone"
+										dataKey="AnthropicARR"
+										name="Anthropic end-of-half ARR"
+										stroke="#0f766e"
+										strokeWidth={2}
+										strokeDasharray="6 4"
+										dot={{ r: 4 }}
+									/>
+									<Line
+										type="monotone"
+										dataKey="OpenAIARR"
+										name="OpenAI end-of-half ARR"
+										stroke="#2563eb"
+										strokeWidth={2}
+										strokeDasharray="6 4"
+										dot={{ r: 4 }}
+									/>
+								</ComposedChart>
 							</ResponsiveContainer>
 						</div>
 					</CardContent>
@@ -984,61 +1273,6 @@ export default function ComputeCapacityModel() {
 					</Card>
 				</section>
 
-				<Card className="rounded-3xl shadow-sm">
-					<CardContent className="p-5">
-						<div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-							<div>
-								<h2 className="flex items-center gap-2 text-xl font-semibold">
-									<Database className="h-5 w-5" /> Scenario data table
-								</h2>
-								<p className="text-sm text-slate-500">
-									The explicit arrays behind the charts. All GW figures are
-									half-year average usable capacity.
-								</p>
-							</div>
-						</div>
-						<div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
-							<table className="min-w-full text-sm">
-								<thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
-									<tr>
-										<th className="px-4 py-3">Period</th>
-										<th className="px-4 py-3 text-right">Anthropic GW</th>
-										<th className="px-4 py-3 text-right">OpenAI GW</th>
-										<th className="px-4 py-3 text-right">Anthropic gross</th>
-										<th className="px-4 py-3 text-right">OpenAI gross</th>
-										<th className="px-4 py-3 text-right">Anthropic net</th>
-										<th className="px-4 py-3 text-right">OpenAI net</th>
-									</tr>
-								</thead>
-								<tbody className="divide-y divide-slate-100">
-									{rows.map((r) => (
-										<tr key={r.key}>
-											<td className="px-4 py-3 font-medium">{r.period}</td>
-											<td className="px-4 py-3 text-right">
-												{number(r.AnthropicGW, 2)}
-											</td>
-											<td className="px-4 py-3 text-right">
-												{number(r.OpenAIGW, 2)}
-											</td>
-											<td className="px-4 py-3 text-right">
-												{currency(r.AnthropicGross)}
-											</td>
-											<td className="px-4 py-3 text-right">
-												{currency(r.OpenAIGross)}
-											</td>
-											<td className="px-4 py-3 text-right">
-												{currency(r.AnthropicNet)}
-											</td>
-											<td className="px-4 py-3 text-right">
-												{currency(r.OpenAINet)}
-											</td>
-										</tr>
-									))}
-								</tbody>
-							</table>
-						</div>
-					</CardContent>
-				</Card>
 
 				<section className="space-y-4">
 					<div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
