@@ -510,7 +510,7 @@ export default function ComputeCapacityModel() {
 		presetGross(),
 	);
 	const [forecastMode, setForecastMode] = useState<ForecastMode>("premium");
-	const [forecastPremium, setForecastPremium] = useState(1.8);
+	const [forecastPremium, setForecastPremium] = useState(1.3);
 
 	function loadPreset(s: Preset) {
 		setScenario(s);
