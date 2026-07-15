@@ -18,9 +18,22 @@ const { Content } = await render(entry);
 const date = getPostDate(entry);
 const title =
 	entry.data.title || entry.body?.match(/^#\s+(.*)/m)?.[1] || "Untitled Post";
+const description =
+	entry.data.description ?? "A post from Patrick Hulin's internet blog.";
+const ogImage = entry.data.cover?.src ?? "/assets/og-image.png";
+const ogImageWidth = entry.data.cover?.width ?? 1200;
+const ogImageHeight = entry.data.cover?.height ?? 630;
 ---
 
-<Layout title={`${title} — patrick hulin's internet blog`} ogTitle={title}>
+<Layout
+  title={`${title} — patrick hulin's internet blog`}
+  ogTitle={title}
+  description={description}
+  ogImage={ogImage}
+  ogImageWidth={ogImageWidth}
+  ogImageHeight={ogImageHeight}
+  ogType="article"
+>
   <style is:global>
     h1 {
       text-transform: lowercase;
