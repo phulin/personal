@@ -15,7 +15,7 @@ Commercial solvers have existed for years, but they tend to be quite expensive. 
 
 But this is 2026. We don't need libraries anymore. All I needed was code that produced the same output, quickly, in WebGPU (same function; different platform). I've learned to spot the reference-implementation pattern anywhere: PyTorch is a correctness oracle. So I instructed Codex to build me a set of WebGPU kernels that allowed evaluation of the model and the CFR algorithm, and to confirm parity with the PyTorch reference implementation. It passed the parity tests after a single prompt, so I left it running in a loop overnight to optimize the kernels. With that simple approach, Codex got a greater than 10x speedup on its first attempt—and it also flagged that I needed to switch the models' activation function for performance. 
 
-![The original prompt asking Codex to create the custom kernels](./Pasted image 20260715141729.png)
+![The original prompt asking Codex to create the custom kernels](<./Pasted image 20260715141729.png>)
 
 To first order, libraries exist because writing correct, fast, well-architected code is expensive, so we amortize that cost across thousands of users and accept the abstraction penalties that come with generality. If generation is cheap and verifiable, that tradeoff can flip: a custom kernel that does exactly your computation can beat a general library. As [others have noted](https://simonwillison.net/2025/Dec/15/porting-justhtml/), a test suite you trust to exercise all relevant behavior can be better than a specification in the LLM era.
 
