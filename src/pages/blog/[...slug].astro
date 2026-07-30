@@ -1,5 +1,6 @@
 ---
 import { type CollectionEntry, getCollection, render } from "astro:content";
+import PostDate from "../../components/PostDate.astro";
 import { getPostDate } from "../../lib/blog";
 import Layout from "../../layouts/Layout.astro";
 
@@ -71,9 +72,7 @@ const ogImageHeight = entry.data.cover?.height ?? 630;
   <article id={entry.id}>
     <a href={`/blog/${entry.id}`}>
       <h3>
-        <time datetime={date.toISOString()}>
-          {date.toLocaleString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric", hour: "numeric", minute: "2-digit" })}
-        </time>
+        <PostDate date={date} />
       </h3>
     </a>
     <Content />

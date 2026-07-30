@@ -1,0 +1,34 @@
+---
+interface Props {
+	date: Date;
+}
+
+const { date } = Astro.props;
+const isoDate = date.toISOString();
+---
+
+<time datetime={isoDate} data-post-date={isoDate}>{isoDate}</time>
+
+<script>
+	const formatter = new Intl.DateTimeFormat("en-US", {
+		weekday: "long",
+		year: "numeric",
+		month: "long",
+		day: "numeric",
+		hour: "numeric",
+		minute: "2-digit",
+		timeZoneName: "short",
+	});
+
+	for (const element of document.querySelectorAll<HTMLTimeElement>(
+		"time[data-post-date]",
+	)) {
+		const isoDate = element.dataset.postDate;
+		if (!isoDate) continue;
+
+		const date = new Date(isoDate);
+		if (Number.isNaN(date.getTime())) continue;
+
+		element.textContent = formatter.format(date);
+	}
+</script>
