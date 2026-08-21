@@ -1,7 +1,7 @@
 ## work experience
 
 ### independent consultant
-***self-employed | 2026***
+**self-employed | 2026**
 
 consulting on policy, technical and technical policy topics.
 
