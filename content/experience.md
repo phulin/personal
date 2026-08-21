@@ -1,5 +1,12 @@
 ## work experience
 
+### independent consultant
+***self-employed | 2026***
+
+consulting on policy, technical and technical policy topics.
+
+---
+
 ### policy director
 **office of governor ned lamont | 2020 - 2026**
 
